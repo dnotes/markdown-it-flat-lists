@@ -17,3 +17,14 @@ Bulleted list items render as flat paragraphs
 <p class="list-item">- Item 1</p>
 <p class="list-item">- Item 2</p>
 .
+
+Nested list items render with a depth indicator
+.
+- Item 1
+- Item 2
+    - Item 2a
+.
+<p class="list-item">- Item 1</p>
+<p class="list-item">- Item 2</p>
+<p class="list-item indent-2">- Item 2a</p>
+.
