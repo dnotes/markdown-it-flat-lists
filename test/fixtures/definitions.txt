@@ -1,6 +1,19 @@
-These are test definitions. This is a title.
+Numbered list items render as flat paragraphs
 .
-The [markdown](//daringfireball.net/markdown) above should match the html below.
+1. Item 1
+2. Item 2
+2. Item 3
 .
-<p>The <a href="//daringfireball.net/markdown">markdown</a> above should match the html below.</p>
+<p class="list-item">1. Item 1</p>
+<p class="list-item">2. Item 2</p>
+<p class="list-item">2. Item 3</p>
+.
+
+Bulleted list items render as flat paragraphs
+.
+- Item 1
+- Item 2
+.
+<p class="list-item">- Item 1</p>
+<p class="list-item">- Item 2</p>
 .
