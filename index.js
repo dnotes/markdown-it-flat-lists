@@ -29,17 +29,8 @@ module.exports = function plugin(md) {
           if (!p.attrs) {
             p.attrs = []
           }
-          var classIndex = -1
-          for (var i = 0; i < p.attrs.length; i++) {
-            if (p.attrs[i][0] === 'class') {
-              classIndex = i
-              break
-            }
-          }
-          if (classIndex === -1) {
-            p.attrs.push(['class', ''])
-            classIndex = p.attrs.length - 1
-          }
+          var classIndex = p.attrs.length
+          p.attrs.push(['class', ''])
           var classes = p.attrs[classIndex][1].split(' ').filter(e => e.length)
           classes.push('list-item')
           if (depth > 1) {
