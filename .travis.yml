@@ -1,7 +1,14 @@
 language: node_js
 node_js:
- - node
- - lts/*
+- node
+- lts/*
 script: yarn lint && yarn coverage
 sudo: false
-# deploy: run `travis setup npm`
+deploy:
+  provider: npm
+  email: davidhuntatwork@gmail.com
+  api_key:
+    secure: awgIobN1ps1BGBAkRAUS0JvhcR3/VPjTIGBYGsDduKMoZNGFc7C7Ts044QbmOT6fqy4dKo2FgGCswrcqYy/+h12olQHXcUDhxzbKFrnbx2NpCknXfc/rQIeORYtB0vwXjY/XpGA0ZFYJqm32AMgI2bUQSBRm/LibFqjlg4NzZAvb5Ua7nXjZQHYqECjnS2b6PUpFhZTSWJmJTBzUW64Ib0JQnsQVBMTiMdKiGVXTcoCQl2QOVRZi+KUTGnCx2G9R5Ro7NKll5uJdSTv6vko78SU2AwxQ/SUt6SrChAn3JmREYGYoTOCQiLg1e4qdI/uCRPCFfWZm8tHXB51V+ZVrYzV8NVvwnYMR1dsiEOtG/TPIXXjcL+AP7Y25YNuLc2LQXevqhCCrLr1dx4w8RKrLOy37ob5bfQwZovs2qefAg6WFRmTqnt6jDVHfknBhSa+Xt6o2EljYfdxgjyDQ5x74cMZqnKpZTfozuAzdiPPoZQRCS99D1LvAdAUflQ9llgc35apfXZAYPydPDLVT2Rz2cxy/DgVUnsZl0ppy5RNqRLPeDWfdZ72vQIaNegW8zjJXoYsTMxrgXGGBdu9dDwMPD9l+ZX7ZSWTJH8NzVCEWVSljhFJE4K51BAoZ/OhvWpYIcjCJb+cu5sxG77cJwfkQoIo7eUM2Z70PGTPge7wYzh4=
+  on:
+    tags: true
+    repo: dnotes/markdown-it-flat-lists
