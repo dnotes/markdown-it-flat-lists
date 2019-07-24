@@ -65,3 +65,312 @@ Expanded nested list items render with a depth indicator
 <p class="list-item indent-2">- Item 2a</p>
 .
 
+HANGING INDENTATION
+.
+ -  This is a list paragraph
+    with hanging indentation;
+    it should be rendered as
+    a single paragraph.
+.
+<p class="list-item">- This is a list paragraph
+with hanging indentation;
+it should be rendered as
+a single paragraph.</p>
+.
+
+BLANK LINES
+.
+-   
+  foo
+.
+<p class="list-item">- foo</p>
+.
+
+EMPTY LIST ITEMS
+.
+-
+
+  foo
+.
+<p class="list-item">-</p>
+<p>foo</p>
+.
+
+.
+- foo
+-
+- bar
+.
+<p class="list-item">- foo</p>
+<p class="list-item">-</p>
+<p class="list-item">- bar</p>
+.
+
+.
+- foo
+-   
+- bar
+.
+<p class="list-item">- foo</p>
+<p class="list-item">-</p>
+<p class="list-item">- bar</p>
+.
+
+.
+1. foo
+2.
+3. bar
+.
+<p class="list-item">1. foo</p>
+<p class="list-item">2.</p>
+<p class="list-item">3. bar</p>
+.
+
+.
+*
+.
+<p class="list-item">*</p>
+.
+
+SEPARATION FROM PREVIOUS PARAGRAPHS
+.
+Foo
+- bar
+- baz
+.
+This is wrong, no?
+<p>Foo</p>
+<p class="list-item">- bar</p>
+<p class="list-item">- baz</p>
+.
+
+.
+The number of windows in my house is
+1.  The number of doors is 6.
+.
+This is wrong.
+<p>The number of windows in my house is</p>
+<p class="list-item">1. The number of doors is 6.</p>
+.
+
+WITH HEADINGS
+What to do about headings in list items?
+.
+- # Foo
+- Bar
+  ---
+  baz
+.
+This is wrong. Not sure what to do about this.
+<h1>Foo</h1>
+<h2>Bar</h2>
+baz
+.
+
+LIST ITEMS WITH MULTIPLE INTERNAL ELEMENTS
+.
+1.  A paragraph
+    with two lines.
+
+        indented code
+
+    > A block quote.
+.
+<p class="list-item">1. A paragraph
+with two lines.</p>
+<pre><code>indented code
+</code></pre>
+<blockquote>
+<p>A block quote.</p>
+</blockquote>
+.
+
+.
+  - foo
+
+	bar
+.
+<p class="list-item">- foo</p>
+<p>bar</p>
+.
+
+.
+  - foo
+
+    bar
+.
+<p class="list-item">- foo</p>
+<p>bar</p>
+.
+
+.
+- foo
+
+		bar
+.
+<p class="list-item">- foo</p>
+<pre><code>  bar
+</code></pre>
+.
+
+.
+1.  foo
+
+    ```
+    bar
+    ```
+
+    baz
+
+    > bam
+.
+<p class="list-item">1. foo</p>
+<pre><code>bar
+</code></pre>
+<p>baz</p>
+<blockquote>
+<p>bam</p>
+</blockquote>
+.
+
+(this would be a two-paragraph list item in Commonmark)
+.
+- one
+
+  two
+.
+.
+
+(and this as well)
+.
+ -    one
+
+      two
+.
+.
+
+(even if indented by extra spaces)
+.
+-  foo
+
+   bar
+.
+.
+
+(even if separated by multiple blank lines)
+.
+- foo
+
+
+  bar
+.
+.
+
+(even nested items can contain multiple elements)
+.
+- a
+  - b
+
+    c
+- d
+.
+<p class="list-item">- a</p>
+<p class="list-item indent-2">- b</p>
+<p>c</p>
+<p class="list-item">- d</p>
+.
+
+(funky indentation: the second item is part of the first list item)
+.
+   > > 1.  one
+>>
+>>     two
+.
+<blockquote>
+<blockquote>
+<p class="list-item">1. one</p>
+<p>two</p>
+</blockquote>
+</blockquote>
+.
+
+(funky indentation: the second item is NOT part of the first list item)
+.
+>>- one
+>>
+  >  > two
+.
+<blockquote>
+<blockquote>
+<p class="list-item">- one</p>
+<p>two</p>
+</blockquote>
+</blockquote>
+.
+
+(indented code and paragraphs)
+.
+1.     indented code
+
+   paragraph
+
+       more code
+.
+this can't be right:
+<pre><code>indented code
+</code></pre>
+<p>paragraph</p>
+<pre><code>more code
+</code></pre>
+.
+
+LAZY NESTED STRUCTURES
+.
+> 1. > Blockquote
+continued here.
+.
+This is wrong, as the number must be printed.
+<blockquote>
+<blockquote>
+<p>Blockquote
+continued here.</p>
+</blockquote>
+</blockquote>
+.
+
+.
+> 1. > Blockquote
+> continued here.
+.
+This is wrong, as the number must be printed.
+<blockquote>
+<blockquote>
+<p>Blockquote
+continued here.</p>
+</blockquote>
+</blockquote>
+.
+
+.
+- - foo
+.
+This must be wrong.
+<p class="list-item indent-2">- foo</p>
+.
+
+.
+1. - 2. foo
+.
+This is wrong.
+<p class="list-item indent-3">1. foo</p>
+.
+
+INDENTATION WITHIN LIST ITEMS
+
+What to do about code blocks within a list item?
+.
+-		foo
+.
+<pre><code>  foo
+</code></pre>
+.
