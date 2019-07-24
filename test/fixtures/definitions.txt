@@ -28,3 +28,40 @@ Nested list items render with a depth indicator
 <p class="list-item">- Item 2</p>
 <p class="list-item indent-2">- Item 2a</p>
 .
+
+Expanded numbered list items render as flat paragraphs
+.
+1. Item 1
+
+2. Item 2
+
+2. Item 3
+.
+<p class="list-item">1. Item 1</p>
+<p class="list-item">2. Item 2</p>
+<p class="list-item">2. Item 3</p>
+.
+
+Expanded bulleted list items render as flat paragraphs
+.
+- Item 1
+
+- Item 2
+.
+<p class="list-item">- Item 1</p>
+<p class="list-item">- Item 2</p>
+.
+
+Expanded nested list items render with a depth indicator
+.
+- Item 1
+
+- Item 2
+
+    - Item 2a
+.
+<p class="list-item">- Item 1</p>
+<p class="list-item">- Item 2</p>
+<p class="list-item indent-2">- Item 2a</p>
+.
+
