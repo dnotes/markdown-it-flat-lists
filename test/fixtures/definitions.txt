@@ -1,3 +1,5 @@
+BASICS
+
 Numbered list items render as flat paragraphs
 .
 1. Item 1
@@ -167,22 +169,14 @@ This is wrong. Not sure what to do about this.
 baz
 .
 
-LIST ITEMS WITH MULTIPLE INTERNAL ELEMENTS
+LIST ITEMS WITH MULTIPLE PARAGRAPHS
 .
-1.  A paragraph
-    with two lines.
+  - foo
 
-        indented code
-
-    > A block quote.
+    bar
 .
-<p class="list-item">1. A paragraph
-with two lines.</p>
-<pre><code>indented code
-</code></pre>
-<blockquote>
-<p>A block quote.</p>
-</blockquote>
+<p class="list-item">- foo</p>
+<p>bar</p>
 .
 
 .
@@ -192,45 +186,6 @@ with two lines.</p>
 .
 <p class="list-item">- foo</p>
 <p>bar</p>
-.
-
-.
-  - foo
-
-    bar
-.
-<p class="list-item">- foo</p>
-<p>bar</p>
-.
-
-.
-- foo
-
-		bar
-.
-<p class="list-item">- foo</p>
-<pre><code>  bar
-</code></pre>
-.
-
-.
-1.  foo
-
-    ```
-    bar
-    ```
-
-    baz
-
-    > bam
-.
-<p class="list-item">1. foo</p>
-<pre><code>bar
-</code></pre>
-<p>baz</p>
-<blockquote>
-<p>bam</p>
-</blockquote>
 .
 
 (this would be a two-paragraph list item in Commonmark)
@@ -278,6 +233,54 @@ with two lines.</p>
 <p class="list-item indent-2">- b</p>
 <p>c</p>
 <p class="list-item">- d</p>
+.
+
+LIST ITEMS WITH MULTIPLE INTERNAL ELEMENTS
+.
+1.  A paragraph
+    with two lines.
+
+        indented code
+
+    > A block quote.
+.
+<p class="list-item">1. A paragraph
+with two lines.</p>
+<pre><code>indented code
+</code></pre>
+<blockquote>
+<p>A block quote.</p>
+</blockquote>
+.
+
+.
+- foo
+
+		bar
+.
+<p class="list-item">- foo</p>
+<pre><code>  bar
+</code></pre>
+.
+
+.
+1.  foo
+
+    ```
+    bar
+    ```
+
+    baz
+
+    > bam
+.
+<p class="list-item">1. foo</p>
+<pre><code>bar
+</code></pre>
+<p>baz</p>
+<blockquote>
+<p>bam</p>
+</blockquote>
 .
 
 (funky indentation: the second item is part of the first list item)
@@ -366,8 +369,11 @@ This is wrong.
 .
 
 INDENTATION WITHIN LIST ITEMS
+.
+*     This is code in Commonmark.
+.
+.
 
-What to do about code blocks within a list item?
 .
 -		foo
 .
