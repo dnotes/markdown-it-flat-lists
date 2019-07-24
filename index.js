@@ -24,10 +24,9 @@ module.exports = function plugin(md) {
         depth--
       }
       if (t.type === 'list_item_open') {
-        /* istanbul ignore else */
-        if (state.tokens[index + 1].type === 'paragraph_open') { // not sure if it can be not paragraph
+        if (state.tokens[index + 1].type === 'paragraph_open') {
           var p = state.tokens[index + 1]
-          /* istanbul ignore else */
+          // If this line does not have a negative case, it needs /* istanbul ignore else */
           if (!p.attrs) {
             p.attrs = []
           }
