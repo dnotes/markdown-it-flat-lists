@@ -24,8 +24,10 @@ module.exports = function plugin(md) {
         depth--
       }
       if (t.type === 'list_item_open') {
+        /* istanbul ignore else */
         if (state.tokens[index + 1].type === 'paragraph_open') { // not sure if it can be not paragraph
           var p = state.tokens[index + 1]
+          /* istanbul ignore else */
           if (!p.attrs) {
             p.attrs = []
           }
@@ -61,10 +63,12 @@ module.exports = function plugin(md) {
   })
 
   md.block.ruler.after('list', 'flatlist', function (state, startLine) {
+    // else condition or /* istanbul ignore else */
     if (state.tokens.length && state.tokens[state.tokens.length - 1].type === 'list_item_open') {
       var token = state.tokens[state.tokens.length - 1]
       var src = state.src.substr(state.bMarks[startLine], state.eMarks[startLine] - state.bMarks[startLine])
       var pos = src.indexOf(token.markup)
+      // else condition or /* istanbul ignore else */
       if (token.markup && pos !== -1) {
         token.markup = src.substr(0, pos + 1).replace(/^\s+/, '')
       }
