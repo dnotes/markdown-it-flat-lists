@@ -21,12 +21,12 @@
     "coveralls": "^3.0.3",
     "eslint": "^5.16.0",
     "markdown-it": "^8.4.2",
+    "markdown-it-attrs": "^2.4.1",
     "markdown-it-testgen": "^0.1.5",
     "mocha": "^6.1.4",
     "nyc": "^14.1.1",
     "terser": "^3.17.0"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "repository": "github.com/dnotes/markdown-it-flat-lists.git"
 }
