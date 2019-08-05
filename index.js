@@ -12,13 +12,36 @@ module.exports = function plugin(md) {
       md.renderer.rules[el] = nope
     })
 
+  function _mergeAttrs(a, b) {
+    var attrs = {}, res
+
+    function _attrs2obj(arr) {
+      if (Array.isArray(arr)) {
+        for (var i = 0; i < arr.length; i++) {
+          if (!attrs.hasOwnProperty(arr[i][0])) {
+            attrs[arr[i][0]] = []
+          }
+          attrs[arr[i][0]].push(arr[i][1])
+        }
+      }
+    }
+
+    _attrs2obj(a)
+    _attrs2obj(b)
+    res = Object.keys(attrs).map(attr => [attr, attrs[attr].join(' ')])
+    return res.length ? res : null
+  }
+
   md.core.ruler.push('flatlist', function (state) {
+    // console.log(state.tokens)
     var depth = 0
+    var attrs
 
     for (var index = 0; index < state.tokens.length; index++) {
       var t = state.tokens[index]
       if (t.type === 'ordered_list_open' || t.type === 'bullet_list_open') {
         depth++
+        attrs = t.attrs
       }
       else if (t.type === 'ordered_list_close' || t.type === 'bullet_list_close') {
         depth--
@@ -28,17 +51,8 @@ module.exports = function plugin(md) {
         if (state.tokens[index + 1].type === 'paragraph_open') { // not sure if it can be not paragraph
           var p = state.tokens[index + 1]
           /* istanbul ignore else */
-          if (!p.attrs) {
-            p.attrs = []
-          }
-          var classIndex = p.attrs.length
-          p.attrs.push(['class', ''])
-          var classes = p.attrs[classIndex][1].split(' ').filter(e => e.length)
-          classes.push('list-item')
-          if (depth > 1) {
-            classes.push('indent-' + depth)
-          }
-          p.attrs[classIndex][1] = classes.join(' ')
+          p.attrs = _mergeAttrs(state.tokens[index].attrs || attrs, p.attrs)
+          p.attrs = _mergeAttrs(p.attrs, [['class', 'list-item' + (depth > 1 ? ' indent-' + depth : '')]])
           p.hidden = false
           var j = index + 2, nestedness = 1
           do { // find corresponding para end and make it visible
@@ -58,21 +72,44 @@ module.exports = function plugin(md) {
           markup.content = t.markup + ' '
           content.children.unshift(markup)
         }
+        else if (state.tokens[index + 1].type === 'list_item_close') { // empty one
+          var pOpen = new state.Token('paragraph_open', 'p', 1)
+          pOpen.map = t.map
+          pOpen.attrs = [['class', 'list-item']]
+          var emptyContent = new state.Token('inline', '', 0)
+          emptyContent.map = t.map
+          emptyContent.content = t.markup
+          var text = new state.Token('text')
+          text.content = t.markup
+          emptyContent.children = [text]
+          var pClose = new state.Token('paragraph_close', 'p', -1)
+          pClose.map = t.map
+          state.tokens.splice(index + 1, 0, pOpen, emptyContent, pClose, new state.Token('softbreak'))
+        }
       }
     }
+    // console.log('---',state.tokens)
   })
+
+  function _processListItemOpenToken(token, state) {
+    var src = state.src.substr(
+      state.bMarks[token.map[0]],
+      state.eMarks[token.map[1] > token.map[0] ? token.map[1] : token.map[0] + 1] - state.bMarks[token.map[0]]
+    )
+    var pos = src.indexOf(token.markup)
+    // else condition or /* istanbul ignore else */
+    if (token.markup && pos !== -1) {
+      token.markup = src.substr(0, pos + 1).replace(/^\s+/, '')
+    }
+    token.flatlistRendererProcessed = true
+
+  }
 
   md.block.ruler.after('list', 'flatlist', function (state, startLine) {
     // else condition or /* istanbul ignore else */
-    if (state.tokens.length && state.tokens[state.tokens.length - 1].type === 'list_item_open') {
-      var token = state.tokens[state.tokens.length - 1]
-      var src = state.src.substr(state.bMarks[startLine], state.eMarks[startLine] - state.bMarks[startLine])
-      var pos = src.indexOf(token.markup)
-      // else condition or /* istanbul ignore else */
-      if (token.markup && pos !== -1) {
-        token.markup = src.substr(0, pos + 1).replace(/^\s+/, '')
-      }
-    }
+    state.tokens
+      .filter(token => token.type === 'list_item_open' && !token.flatlistRendererProcessed)
+      .forEach(token => _processListItemOpenToken(token, state, startLine))
   })
 
   return md
