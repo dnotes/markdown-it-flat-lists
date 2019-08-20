@@ -87,7 +87,7 @@ HANGING INDENTATION IS SUPPORTED
 .
 <p>1. Item 1
 with a hanging indent</p>
-<p>-  Item 1
+<p>- Item 1
 with a hanging indent</p>
 .
 
@@ -203,12 +203,12 @@ HEADINGS IN LIST ITEMS ARE NOT SUPPORTED
 .
 - # Foo
 - Bar
-  ---
+---
   baz
 .
 <p class="li">- # Foo</p>
 <p class="li">- Bar</p>
-<hr />
+<hr>
 <p>baz</p>
 .
 
