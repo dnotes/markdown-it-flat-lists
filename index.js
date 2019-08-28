@@ -14,6 +14,12 @@ module.exports = function plugin(md) {
 
   //----------------------------------------------------------------------------------------
 
+  function _spaces(numberOfSpaces) {
+    return numberOfSpaces > 0 ? ' '.repeat(numberOfSpaces) : ''
+  }
+
+  //----------------------------------------------------------------------------------------
+
   function _isNextListItemTight(tokens, current) {
     var i = current + 1, level = tokens[current].level
     while (i < tokens.length && (!tokens[i].level || tokens[i].level > level)) i++
@@ -25,20 +31,7 @@ module.exports = function plugin(md) {
       'bullet_list_close',
       'list_item_close',
     ].indexOf(tokens[i].type) > -1) i++
-    return !tokens[i] || tokens[i].type === 'list_item_open'
-  }
-
-  //----------------------------------------------------------------------------------------
-
-  function _isLastItem(tokens, current) {
-    current++
-    while (current < tokens.length) {
-      if (tokens[current].type === 'list_item_open') {
-        return false
-      }
-      current++
-    }
-    return true
+    return tokens[i] && tokens[i].type === 'list_item_open'
   }
 
   //----------------------------------------------------------------------------------------
@@ -101,7 +94,7 @@ module.exports = function plugin(md) {
   }
 
   //----------------------------------------------------------------------------------------
-  function _mergeAttrs(a, b) {
+  function _mergeAttrs() {
     var attrs = {}, res
 
     function _attrs2obj(arr) {
@@ -115,15 +108,17 @@ module.exports = function plugin(md) {
       }
     }
 
-    _attrs2obj(a)
-    _attrs2obj(b)
+    for (var i = 0; i < arguments.length; i++) {
+      _attrs2obj(arguments[i])
+    }
     res = Object.keys(attrs).map(attr => [attr, attrs[attr].join(' ')])
     return res.length ? res : null
   }
 
   //----------------------------------------------------------------------------------------
   md.core.ruler.push('flatlist', function (state) {
-    var depth = 0, tight = false, prevTight = false, classes, attrs
+    var depth = 0, tight = false, prevTight = false, nextTight = false, classes, attrs = [], listTopLevel = 0,
+        forceLoose = false, i, j, level
     var index, t
     for (index = 0; index < state.tokens.length; index++) {
       t = state.tokens[index]
@@ -143,7 +138,7 @@ module.exports = function plugin(md) {
         state.tokens[index - 2].content += '\n' + dt[0]
         state.tokens.splice(index, dt[1] - index)
         var lines = dt[0].split('\n')
-        for (var i = 0; i < lines.length; i++) {
+        for (i = 0; i < lines.length; i++) {
           var newToken = new state.Token('text', '', 0)
           newToken.content = lines[i]
           state.tokens[index - 2].children.push(newToken)
@@ -168,12 +163,41 @@ module.exports = function plugin(md) {
     for (index = 0; index < state.tokens.length; index++) {
       t = state.tokens[index]
       if (t.type === 'ordered_list_open' || t.type === 'bullet_list_open') {
+        if (!depth) {
+          listTopLevel = t.level + 1
+        }
         depth++
+        attrs.push(t.attrs)
       }
       else if (t.type === 'ordered_list_close' || t.type === 'bullet_list_close') {
         depth--
+        attrs.pop()
       }
       else if (t.type === 'list_item_open') {
+        if (
+          state.tokens[index + 1].type === 'paragraph_open' &&
+          state.tokens[index + 4].type === 'paragraph_open' &&
+          (t.indents && t.indents.before !== 4 * (depth - 1))
+        ) {
+          t.markup += _spaces(t.indents.after - 1)
+          j = index + 4
+          while (state.tokens[j].type === 'paragraph_open') {
+            var pre = new state.Token('code_block', 'code', 0)
+            pre.map = state.tokens[j].map
+            pre.level = state.tokens[j].level
+            pre.content = _spaces(t.indents.after - 2) + state.tokens[j + 1].content
+            state.tokens.splice(j, 3, pre)
+            j++
+          }
+          forceLoose = true
+        }
+        else if (
+          state.tokens[index + 1].type === 'paragraph_open' &&
+          state.tokens[index + 4].type === 'paragraph_open' &&
+          t.indents
+        ) {
+          t.markup += _spaces(t.indents.after - 1)
+        }
         if (state.tokens[index + 1].type === 'paragraph_open') {
           var p = state.tokens[index + 1]
           // If this line does not have a negative case, it needs /* istanbul ignore else */
@@ -182,13 +206,14 @@ module.exports = function plugin(md) {
           }
           prevTight = tight
 
-          tight = _isNextListItemTight(state.tokens, index)
-          if (tight && !prevTight && _isLastItem(state.tokens, index)) {
+          nextTight = _isNextListItemTight(state.tokens, index)
+
+          tight = prevTight || nextTight
+
+          if (tight && p.hidden === false && p.level === listTopLevel + 1) {
             tight = false
           }
-          if (!p.hidden) {
-            tight = false
-          }
+
           var hanging = false
           if (
             state.tokens[index + 2].type === 'inline' &&
@@ -204,12 +229,17 @@ module.exports = function plugin(md) {
           if (depth > 1) {
             classes.push(((tight && !hanging) ? 'li' : 'l') + depth)
           }
-          p.attrs = _mergeAttrs(state.tokens[index].attrs || attrs, p.attrs)
+          p.attrs = _mergeAttrs(state.tokens[index].attrs, p.attrs, _mergeAttrs.apply(false, attrs))
           if (classes.length) {
             p.attrs = _mergeAttrs(p.attrs, [['class', classes.join(' ')]])
           }
           p.hidden = false
-          var j = index + 1, level = state.tokens[j].level
+          if (forceLoose) {
+            forceLoose = false
+            tight = false
+          }
+          j = index + 1
+          level = state.tokens[j].level
           do { // find corresponding para end and make it visible
             if (state.tokens[j].type === 'paragraph_open' && state.tokens[j].level === level) {
               state.tokens[j].hidden = false
@@ -226,10 +256,10 @@ module.exports = function plugin(md) {
           state.tokens[index + 2].content =
             t.markup + (state.tokens[index + 2].content.length ? ' ' + state.tokens[index + 2].content : '')
           state.tokens[index + 2].children[0].content = t.markup +
-              (state.tokens[index + 2].children[0].content.length ?
-                ' ' + state.tokens[index + 2].children[0].content :
-                ''
-              )
+            (state.tokens[index + 2].children[0].content.length ?
+              ' ' + state.tokens[index + 2].children[0].content :
+              ''
+            )
         }
       }
     }
@@ -243,7 +273,20 @@ module.exports = function plugin(md) {
     var pos = src.indexOf(token.markup)
     // else condition or /* istanbul ignore else */
     if (token.markup && pos !== -1) {
-      token.markup = src.substr(0, pos + 1).replace(/^\s+/, '')
+      token.markup = src.substr(0, pos + 1)
+      token.indents = {
+        before: 0,
+        after: 0,
+      }
+      while (
+        token.indents.before < token.markup.length &&
+        token.markup.charCodeAt(token.indents.before) === 32
+      ) {
+        token.indents.before++
+      }
+      token.markup = token.markup.replace(/^\s+/, '')
+      token.indents.after = state.sCount[token.map[0]] - token.indents.before - token.markup.length
+
     }
     token.flatlistRendererProcessed = true
 

@@ -248,7 +248,7 @@ LIST ITEMS WITH MULTIPLE PARAGRAPHS ARE NOT SUPPORTED
       two
 .
 <p>-    one</p>
-<pre><code>  two</pre></code>
+<pre><code>  two</code></pre>
 .
 
 (even if indented by extra spaces)
@@ -282,7 +282,7 @@ LIST ITEMS WITH MULTIPLE PARAGRAPHS ARE NOT SUPPORTED
 .
 <p class="li">- a</p>
 <p class="li li2">- b</p>
-<pre><code>c</pre></code>
+<pre><code>c</code></pre>
 <p>- d</p>
 .
 
