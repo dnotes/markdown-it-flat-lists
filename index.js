@@ -1,303 +1,360 @@
-'use strict'
+// Lists
 
-module.exports = function plugin(md) {
+'use strict';
 
-  function nope() {
-    return ''
+var isSpace = require('markdown-it/lib/common/utils').isSpace;
+
+
+// Search `[-+*][\n ]`, returns next pos after marker on success
+// or -1 on fail.
+function skipBulletListMarker(state, startLine) {
+  var marker, pos, max, ch;
+
+  pos = state.bMarks[startLine] + state.tShift[startLine];
+  max = state.eMarks[startLine];
+
+  marker = state.src.charCodeAt(pos++);
+  // Check bullet
+  if (marker !== 0x2A/* * */ &&
+      marker !== 0x2D/* - */ &&
+      marker !== 0x2B/* + */) {
+    return -1;
   }
 
-  'ordered_list_open|ordered_list_close|bullet_list_open|bullet_list_close|list_item_open|list_item_close'
-    .split('|')
-    .forEach(el => {
-      md.renderer.rules[el] = nope
-    })
+  if (pos < max) {
+    ch = state.src.charCodeAt(pos);
 
-  //----------------------------------------------------------------------------------------
-
-  function _spaces(numberOfSpaces) {
-    return numberOfSpaces > 0 ? ' '.repeat(numberOfSpaces) : ''
+    if (!isSpace(ch)) {
+      // " -test " - is not a list item
+      return -1;
+    }
   }
 
-  //----------------------------------------------------------------------------------------
-
-  function _isNextListItemTight(tokens, current) {
-    var i = current + 1, level = tokens[current].level
-    while (i < tokens.length && (!tokens[i].level || tokens[i].level > level)) i++
-    i++ //list_item_close
-    while (i < tokens.length && [
-      'ordered_list_open',
-      'ordered_list_close',
-      'bullet_list_open',
-      'bullet_list_close',
-      'list_item_close',
-    ].indexOf(tokens[i].type) > -1) i++
-    return tokens[i] && tokens[i].type === 'list_item_open'
-  }
-
-  //----------------------------------------------------------------------------------------
-
-  function _getListContent(tokens, current) {
-    var content = [''], markup
-    current++
-    while (tokens[current].type === 'list_item_open') {
-      markup = tokens[current].markup
-      current++
-      if (tokens[current].type === 'list_item_close') {
-        content.push(markup)
-      }
-      else {
-        current++
-        content.push(markup + ' ' + tokens[current].content)
-        current += 3
-      }
-    }
-    current++
-    return [content.join('\n'), current]
-  }
-
-  //----------------------------------------------------------------------------------------
-
-  function _insertPara(state, index, content, startLine, itemsCountToRemove) {
-    var replacementTokens = []
-    var token = new state.Token('paragraph_open', 'p', 1)
-    var contentLines = content.split('\n')
-    var level = index ? state.tokens[index - 1].level + 1 : 1
-    token.level = level
-    token.map = [startLine, startLine + contentLines.length]
-    token.hidden = true
-    replacementTokens.push(token)
-
-    token = new state.Token('inline', '', 0)
-    token.level = level + 1
-    token.content = content
-    token.map = [startLine, startLine + contentLines.length]
-    token.children = []
-    for (var i = 0; i < contentLines.length; i++) {
-      var lineToken = new state.Token('text', '', 0)
-      lineToken.level = level + 2
-      lineToken.content = contentLines[i]
-      token.children.push(lineToken)
-      if (i < contentLines.length - 1) {
-        token.children.push(new state.Token('softbreak', '', 0))
-      }
-    }
-    replacementTokens.push(token)
-
-    token = new state.Token('paragraph_close', 'p', -1)
-    token.level = level
-    replacementTokens.push(token)
-    replacementTokens.push(new state.Token('softbreak', '', 0))
-
-    replacementTokens.unshift(itemsCountToRemove)
-    replacementTokens.unshift(index)
-    Array.prototype.splice.apply(state.tokens, replacementTokens)
-  }
-
-  //----------------------------------------------------------------------------------------
-  function _mergeAttrs() {
-    var attrs = {}, res
-
-    function _attrs2obj(arr) {
-      if (Array.isArray(arr)) {
-        for (var i = 0; i < arr.length; i++) {
-          if (!attrs.hasOwnProperty(arr[i][0])) {
-            attrs[arr[i][0]] = []
-          }
-          attrs[arr[i][0]].unshift(arr[i][1])
-        }
-      }
-    }
-
-    for (var i = 0; i < arguments.length; i++) {
-      _attrs2obj(arguments[i])
-    }
-    res = Object.keys(attrs).map(attr => [attr, attrs[attr].join(' ')])
-    return res.length ? res : null
-  }
-
-  //----------------------------------------------------------------------------------------
-  md.core.ruler.push('flatlist', function (state) {
-    var depth = 0, tight = false, prevTight = false, nextTight = false, classes, attrs = [], listTopLevel = 0,
-        forceLoose = false, i, j, level
-    var index, t
-    for (index = 0; index < state.tokens.length; index++) {
-      t = state.tokens[index]
-      if (t.type === 'ordered_list_open' || t.type === 'bullet_list_open') {
-        depth++
-      }
-      else if (t.type === 'ordered_list_close' || t.type === 'bullet_list_close') {
-        depth--
-      }
-      if (
-        depth === 1 &&
-        (t.type === 'ordered_list_open' || t.type === 'bullet_list_open') &&
-        index && state.tokens[index - 1].type === 'paragraph_close' &&
-        state.tokens[index - 2].map[1] === state.tokens[index].map[0]
-      ) {
-        var dt = _getListContent(state.tokens, index)
-        state.tokens[index - 2].content += '\n' + dt[0]
-        state.tokens.splice(index, dt[1] - index)
-        var lines = dt[0].split('\n')
-        for (i = 0; i < lines.length; i++) {
-          var newToken = new state.Token('text', '', 0)
-          newToken.content = lines[i]
-          state.tokens[index - 2].children.push(newToken)
-          state.tokens[index - 2].children.push(new state.Token('softbreak', '', 0))
-        }
-        state.tokens[index - 2].children.pop()
-        depth--
-      }
-      else if (t.type === 'list_item_open') {
-        if (state.tokens[index + 1].type === 'heading_open') {
-          var content = state.tokens[index + 2].content
-          if (state.tokens[index + 1].markup !== t.markup) {
-            content = state.tokens[index + 1].markup + (content.length ? ' ' + content : '')
-          }
-          _insertPara(state, index + 1, content, t.map[0], 3)
-        }
-        if (state.tokens[index + 1].type === 'list_item_close') { // empty one
-          _insertPara(state, index + 1, '', t.map[0], 0)
-        }
-      }
-    }
-    for (index = 0; index < state.tokens.length; index++) {
-      t = state.tokens[index]
-      if (t.type === 'ordered_list_open' || t.type === 'bullet_list_open') {
-        if (!depth) {
-          listTopLevel = t.level + 1
-        }
-        depth++
-        attrs.push(t.attrs)
-      }
-      else if (t.type === 'ordered_list_close' || t.type === 'bullet_list_close') {
-        depth--
-        attrs.pop()
-      }
-      else if (t.type === 'list_item_open') {
-        if (
-          state.tokens[index + 1].type === 'paragraph_open' &&
-          state.tokens[index + 4].type === 'paragraph_open' &&
-          (t.indents && t.indents.before !== 4 * (depth - 1))
-        ) {
-          t.markup += _spaces(t.indents.after - 1)
-          j = index + 4
-          while (state.tokens[j].type === 'paragraph_open') {
-            var pre = new state.Token('code_block', 'code', 0)
-            pre.map = state.tokens[j].map
-            pre.level = state.tokens[j].level
-            pre.content = _spaces(t.indents.after - 2) + state.tokens[j + 1].content
-            state.tokens.splice(j, 3, pre)
-            j++
-          }
-          forceLoose = true
-        }
-        else if (
-          state.tokens[index + 1].type === 'paragraph_open' &&
-          state.tokens[index + 4].type === 'paragraph_open' &&
-          t.indents
-        ) {
-          t.markup += _spaces(t.indents.after - 1)
-        }
-        if (state.tokens[index + 1].type === 'paragraph_open') {
-          var p = state.tokens[index + 1]
-          // If this line does not have a negative case, it needs /* istanbul ignore else */
-          if (!p.attrs) {
-            p.attrs = []
-          }
-          prevTight = tight
-
-          nextTight = _isNextListItemTight(state.tokens, index)
-
-          tight = prevTight || nextTight
-
-          if (tight && p.hidden === false && p.level === listTopLevel + 1) {
-            tight = false
-          }
-
-          var hanging = false
-          if (
-            state.tokens[index + 2].type === 'inline' &&
-            state.tokens[index + 2].children &&
-            state.tokens[index + 2].children.length > 2
-          ) {
-            hanging = state.tokens[index + 2].content.indexOf('\n') >= 0
-          }
-          classes = []
-          if (tight && !hanging) {
-            classes.push('li')
-          }
-          if (depth > 1) {
-            classes.push(((tight && !hanging) ? 'li' : 'l') + depth)
-          }
-          p.attrs = _mergeAttrs(state.tokens[index].attrs, p.attrs, _mergeAttrs.apply(false, attrs))
-          if (classes.length) {
-            p.attrs = _mergeAttrs(p.attrs, [['class', classes.join(' ')]])
-          }
-          p.hidden = false
-          if (forceLoose) {
-            forceLoose = false
-            tight = false
-          }
-          j = index + 1
-          level = state.tokens[j].level
-          do { // find corresponding para end and make it visible
-            if (state.tokens[j].type === 'paragraph_open' && state.tokens[j].level === level) {
-              state.tokens[j].hidden = false
-            }
-            if (state.tokens[j].type === 'paragraph_close' && state.tokens[j].level === level) {
-              state.tokens[j].hidden = false
-            }
-            j++
-          } while (j < state.tokens.length && (!state.tokens[j].level || state.tokens[j].level > t.level))
-
-          if (!Array.isArray(state.tokens[index + 2].children) || !state.tokens[index + 2].children.length) {
-            state.tokens[index + 2].children = [new state.Token('text', '', 0)]
-          }
-          state.tokens[index + 2].content =
-            t.markup + (state.tokens[index + 2].content.length ? ' ' + state.tokens[index + 2].content : '')
-          state.tokens[index + 2].children[0].content = t.markup +
-            (state.tokens[index + 2].children[0].content.length ?
-              ' ' + state.tokens[index + 2].children[0].content :
-              ''
-            )
-        }
-      }
-    }
-  })
-
-  function _processListItemOpenToken(token, state) {
-    var src = state.src.substr(
-      state.bMarks[token.map[0]],
-      state.eMarks[token.map[1] > token.map[0] ? token.map[1] : token.map[0] + 1] - state.bMarks[token.map[0]]
-    )
-    var pos = src.indexOf(token.markup)
-    // else condition or /* istanbul ignore else */
-    if (token.markup && pos !== -1) {
-      token.markup = src.substr(0, pos + 1)
-      token.indents = {
-        before: 0,
-        after: 0,
-      }
-      while (
-        token.indents.before < token.markup.length &&
-        token.markup.charCodeAt(token.indents.before) === 32
-      ) {
-        token.indents.before++
-      }
-      token.markup = token.markup.replace(/^\s+/, '')
-      token.indents.after = state.sCount[token.map[0]] - token.indents.before - token.markup.length
-
-    }
-    token.flatlistRendererProcessed = true
-
-  }
-
-  md.block.ruler.after('list', 'flatlist', function (state, startLine) {
-    // else condition or /* istanbul ignore else */
-    state.tokens
-      .filter(token => token.type === 'list_item_open' && !token.flatlistRendererProcessed)
-      .forEach(token => _processListItemOpenToken(token, state, startLine))
-  })
-
-  return md
+  return pos;
 }
+
+// Search `\d+[.)][\n ]`, returns next pos after marker on success
+// or -1 on fail.
+function skipOrderedListMarker(state, startLine) {
+  var ch,
+      start = state.bMarks[startLine] + state.tShift[startLine],
+      pos = start,
+      max = state.eMarks[startLine];
+
+  // List marker should have at least 2 chars (digit + dot)
+  if (pos + 1 >= max) { return -1; }
+
+  ch = state.src.charCodeAt(pos++);
+
+  if (ch < 0x30/* 0 */ || ch > 0x39/* 9 */) { return -1; }
+
+  for (;;) {
+    // EOL -> fail
+    if (pos >= max) { return -1; }
+
+    ch = state.src.charCodeAt(pos++);
+
+    if (ch >= 0x30/* 0 */ && ch <= 0x39/* 9 */) {
+
+      // List marker should have no more than 9 digits
+      // (prevents integer overflow in browsers)
+      if (pos - start >= 10) { return -1; }
+
+      continue;
+    }
+
+    // found valid marker
+    if (ch === 0x29/* ) */ || ch === 0x2e/* . */) {
+      break;
+    }
+
+    return -1;
+  }
+
+
+  if (pos < max) {
+    ch = state.src.charCodeAt(pos);
+
+    if (!isSpace(ch)) {
+      // " 1.test " - is not a list item
+      return -1;
+    }
+  }
+  return pos;
+}
+
+function markTightParagraphs(state, idx) {
+  var i, l,
+      level = state.level + 2;
+
+  for (i = idx + 2, l = state.tokens.length - 2; i < l; i++) {
+    if (state.tokens[i].level === level && state.tokens[i].type === 'paragraph_open') {
+      state.tokens[i + 2].hidden = true;
+      state.tokens[i].hidden = true;
+      i += 2;
+    }
+  }
+}
+
+
+module.exports = function list(state, startLine, endLine, silent) {
+  var ch,
+      contentStart,
+      i,
+      indent,
+      indentAfterMarker,
+      initial,
+      isOrdered,
+      itemLines,
+      l,
+      listLines,
+      listTokIdx,
+      markerCharCode,
+      markerValue,
+      max,
+      nextLine,
+      offset,
+      oldListIndent,
+      oldParentType,
+      oldSCount,
+      oldTShift,
+      oldTight,
+      pos,
+      posAfterMarker,
+      prevEmptyEnd,
+      start,
+      terminate,
+      terminatorRules,
+      token,
+      isTerminatingParagraph = false,
+      tight = true;
+
+  // if it's indented more than 3 spaces, it should be a code block
+  if (state.sCount[startLine] - state.blkIndent >= 4) { return false; }
+
+  // Special case:
+  //  - item 1
+  //   - item 2
+  //    - item 3
+  //     - item 4
+  //      - this one is a paragraph continuation
+  if (state.listIndent >= 0 &&
+      state.sCount[startLine] - state.listIndent >= 4 &&
+      state.sCount[startLine] < state.blkIndent) {
+    return false;
+  }
+
+  // limit conditions when list can interrupt
+  // a paragraph (validation mode only)
+  if (silent && state.parentType === 'paragraph') {
+    // Next list item should still terminate previous list item;
+    //
+    // This code can fail if plugins use blkIndent as well as lists,
+    // but I hope the spec gets fixed long before that happens.
+    //
+    if (state.tShift[startLine] >= state.blkIndent) {
+      isTerminatingParagraph = true;
+    }
+  }
+
+  // Detect list type and position after marker
+  if ((posAfterMarker = skipOrderedListMarker(state, startLine)) >= 0) {
+    isOrdered = true;
+    start = state.bMarks[startLine] + state.tShift[startLine];
+    markerValue = Number(state.src.substr(start, posAfterMarker - start - 1));
+
+    // If we're starting a new ordered list right after
+    // a paragraph, it should start with 1.
+    if (isTerminatingParagraph && markerValue !== 1) return false;
+
+  } else if ((posAfterMarker = skipBulletListMarker(state, startLine)) >= 0) {
+    isOrdered = false;
+
+  } else {
+    return false;
+  }
+
+  // If we're starting a new unordered list right after
+  // a paragraph, first line should not be empty.
+  if (isTerminatingParagraph) {
+    if (state.skipSpaces(posAfterMarker) >= state.eMarks[startLine]) return false;
+  }
+
+  // We should terminate list on style change. Remember first one to compare.
+  markerCharCode = state.src.charCodeAt(posAfterMarker - 1);
+
+  // For validation mode we can terminate immediately
+  if (silent) { return true; }
+
+  // Start list
+  listTokIdx = state.tokens.length;
+
+  if (isOrdered) {
+    token       = state.push('ordered_list_open', 'ol', 1);
+    if (markerValue !== 1) {
+      token.attrs = [ [ 'start', markerValue ] ];
+    }
+
+  } else {
+    token       = state.push('bullet_list_open', 'ul', 1);
+  }
+
+  token.map    = listLines = [ startLine, 0 ];
+  token.markup = String.fromCharCode(markerCharCode);
+
+  //
+  // Iterate list items
+  //
+
+  nextLine = startLine;
+  prevEmptyEnd = false;
+  terminatorRules = state.md.block.ruler.getRules('list');
+
+  oldParentType = state.parentType;
+  state.parentType = 'list';
+
+  while (nextLine < endLine) {
+    pos = posAfterMarker;
+    max = state.eMarks[nextLine];
+
+    initial = offset = state.sCount[nextLine] + posAfterMarker - (state.bMarks[startLine] + state.tShift[startLine]);
+
+    while (pos < max) {
+      ch = state.src.charCodeAt(pos);
+
+      if (ch === 0x09) {
+        offset += 4 - (offset + state.bsCount[nextLine]) % 4;
+      } else if (ch === 0x20) {
+        offset++;
+      } else {
+        break;
+      }
+
+      pos++;
+    }
+
+    contentStart = pos;
+
+    if (contentStart >= max) {
+      // trimming space in "-    \n  3" case, indent is 1 here
+      indentAfterMarker = 1;
+    } else {
+      indentAfterMarker = offset - initial;
+    }
+
+    // If we have more than 4 spaces, the indent is 1
+    // (the rest is just indented code block)
+    if (indentAfterMarker > 4) { indentAfterMarker = 1; }
+
+    // "  -  test"
+    //  ^^^^^ - calculating total length of this thing
+    indent = initial + indentAfterMarker;
+
+    // Run subparser & write tokens
+    token        = state.push('list_item_open', 'li', 1);
+    token.markup = String.fromCharCode(markerCharCode);
+    token.map    = itemLines = [ startLine, 0 ];
+
+    // change current state, then restore it after parser subcall
+    oldTight = state.tight;
+    oldTShift = state.tShift[startLine];
+    oldSCount = state.sCount[startLine];
+
+    //  - example list
+    // ^ listIndent position will be here
+    //   ^ blkIndent position will be here
+    //
+    oldListIndent = state.listIndent;
+    state.listIndent = state.blkIndent;
+    state.blkIndent = indent;
+
+    state.tight = true;
+    state.tShift[startLine] = contentStart - state.bMarks[startLine];
+    state.sCount[startLine] = offset;
+
+    if (contentStart >= max && state.isEmpty(startLine + 1)) {
+      // workaround for this case
+      // (list item is empty, list terminates before "foo"):
+      // ~~~~~~~~
+      //   -
+      //
+      //     foo
+      // ~~~~~~~~
+      state.line = Math.min(state.line + 2, endLine);
+    } else {
+      state.md.block.tokenize(state, startLine, endLine, true);
+    }
+
+    // If any of list item is tight, mark list as tight
+    if (!state.tight || prevEmptyEnd) {
+      tight = false;
+    }
+    // Item become loose if finish with empty line,
+    // but we should filter last element, because it means list finish
+    prevEmptyEnd = (state.line - startLine) > 1 && state.isEmpty(state.line - 1);
+
+    state.blkIndent = state.listIndent;
+    state.listIndent = oldListIndent;
+    state.tShift[startLine] = oldTShift;
+    state.sCount[startLine] = oldSCount;
+    state.tight = oldTight;
+
+    token        = state.push('list_item_close', 'li', -1);
+    token.markup = String.fromCharCode(markerCharCode);
+
+    nextLine = startLine = state.line;
+    itemLines[1] = nextLine;
+    contentStart = state.bMarks[startLine];
+
+    if (nextLine >= endLine) { break; }
+
+    //
+    // Try to check if list is terminated or continued.
+    //
+    if (state.sCount[nextLine] < state.blkIndent) { break; }
+
+    // if it's indented more than 3 spaces, it should be a code block
+    if (state.sCount[startLine] - state.blkIndent >= 4) { break; }
+
+    // fail if terminating block found
+    terminate = false;
+    for (i = 0, l = terminatorRules.length; i < l; i++) {
+      if (terminatorRules[i](state, nextLine, endLine, true)) {
+        terminate = true;
+        break;
+      }
+    }
+    if (terminate) { break; }
+
+    // fail if list has another type
+    if (isOrdered) {
+      posAfterMarker = skipOrderedListMarker(state, nextLine);
+      if (posAfterMarker < 0) { break; }
+    } else {
+      posAfterMarker = skipBulletListMarker(state, nextLine);
+      if (posAfterMarker < 0) { break; }
+    }
+
+    if (markerCharCode !== state.src.charCodeAt(posAfterMarker - 1)) { break; }
+  }
+
+  // Finalize list
+  if (isOrdered) {
+    token = state.push('ordered_list_close', 'ol', -1);
+  } else {
+    token = state.push('bullet_list_close', 'ul', -1);
+  }
+  token.markup = String.fromCharCode(markerCharCode);
+
+  listLines[1] = nextLine;
+  state.line = nextLine;
+
+  state.parentType = oldParentType;
+
+  // mark paragraphs tight if needed
+  if (tight) {
+    markTightParagraphs(state, listTokIdx);
+  }
+
+  return true;
+};
