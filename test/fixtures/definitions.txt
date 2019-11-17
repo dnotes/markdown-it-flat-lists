@@ -1,22 +1,22 @@
 BASICS
 
-"TIGHT" LISTS ARE RENDERED WITH CLASS "LI"
+"TIGHT" LISTS ARE RENDERED AS A SINGLE PARAGRAPH
 .
 1. Item 1
 2. Item 2
 2. Item 3
 .
-<p class="li">1. Item 1</p>
-<p class="li">2. Item 2</p>
-<p class="li">2. Item 3</p>
+<p><span class="li">1. Item 1</span><br/>
+<span class="li">2. Item 2</span><br/>
+<span class="li">2. Item 3</span></p>
 .
 
 .
 - Item 1
 * Item 2
 .
-<p class="li">- Item 1</p>
-<p class="li">* Item 2</p>
+<p><span class="li">- Item 1</span><br/>
+<span class="li">* Item 2</span></p>
 .
 
 .
@@ -25,10 +25,10 @@ BASICS
 - Item 2
     - Item 2a
 .
-<p class="li">- Item 1</p>
-<p class="li li2">- Item 1a</p>
-<p class="li">- Item 2</p>
-<p class="li li2">- Item 2a</p>
+<p><span class="li">- Item 1</span><br/>
+<span class="li li2">- Item 1a</span><br/>
+<span class="li">- Item 2</span><br/>
+<span class="li li2">- Item 2a</span></p>
 .
 
 "LOOSE" LISTS ARE RENDERED AS FLAT PARAGRAPHS
@@ -39,9 +39,9 @@ BASICS
 
 2. Item 3
 .
-<p>1. Item 1</p>
-<p>2. Item 2</p>
-<p>2. Item 3</p>
+<p class="li">1. Item 1</p>
+<p class="li">2. Item 2</p>
+<p class="li">2. Item 3</p>
 .
 
 .
@@ -49,8 +49,8 @@ BASICS
 
 - Item 2
 .
-<p>- Item 1</p>
-<p>- Item 2</p>
+<p class="li">- Item 1</p>
+<p class="li">- Item 2</p>
 .
 
 .
@@ -60,9 +60,9 @@ BASICS
 
     - Item 2a
 .
-<p>- Item 1</p>
-<p>- Item 2</p>
-<p class="l2">- Item 2a</p>
+<p class="li">- Item 1</p>
+<p class="li">- Item 2</p>
+<p class="li li2">- Item 2a</p>
 .
 
 .
@@ -72,9 +72,9 @@ BASICS
 
    1. Paragraph text.
 .
-<p>1. Paragraph text.</p>
-<p>2. Paragraph text.</p>
-<p class="l2">1. Paragraph text.</p>
+<p class="li">1. Paragraph text.</p>
+<p class="li">2. Paragraph text.</p>
+<p class="li li2">1. Paragraph text.</p>
 .
 
 HANGING INDENTATION IS SUPPORTED
@@ -85,9 +85,9 @@ HANGING INDENTATION IS SUPPORTED
  -  Item 1
     with a hanging indent
 .
-<p>1. Item 1
+<p class="li">1. Item 1
 with a hanging indent</p>
-<p>- Item 1
+<p class="li">- Item 1
 with a hanging indent</p>
 .
 
@@ -99,7 +99,7 @@ with a hanging indent</p>
   a single paragraph, since
   the indent is 2 spaces.
 .
-<p>- This is a list paragraph
+<p class="li">- This is a list paragraph
 with hanging indentation;
 it should be rendered as
 a single paragraph, since
@@ -111,7 +111,7 @@ BLANK LINES
 -   
   foo
 .
-<p>- foo</p>
+<p class="li">- foo</p>
 .
 
 EMPTY LIST ITEMS
@@ -120,7 +120,7 @@ EMPTY LIST ITEMS
 
   foo
 .
-<p>-</p>
+<p class="li">-</p>
 <p>foo</p>
 .
 
@@ -129,14 +129,26 @@ EMPTY LIST ITEMS
 -
 - bar
 .
-<p class="li">- foo</p>
-<p class="li">-</p>
-<p class="li">- bar</p>
+<p><span class="li">- foo</span><br/>
+<span class="li">-</span><br/>
+<span class="li">- bar</span></p>
 .
 
 .
 - foo
 -   
+- bar
+.
+<p><span class="li">- foo</span><br/>
+<span class="li">-</span><br/>
+<span class="li">- bar</span></p>
+.
+
+.
+- foo
+
+-   
+
 - bar
 .
 <p class="li">- foo</p>
@@ -149,15 +161,15 @@ EMPTY LIST ITEMS
 2.
 3. bar
 .
-<p class="li">1. foo</p>
-<p class="li">2.</p>
-<p class="li">3. bar</p>
+<p><span class="li">1. foo</span><br/>
+<span class="li">2.</span><br/>
+<span class="li">3. bar</p>
 .
 
 .
 *
 .
-<p>*</p>
+<p class="li">*</p>
 .
 
 SEPARATION FROM PREVIOUS PARAGRAPHS
@@ -167,36 +179,28 @@ Foo
 - baz
 .
 <p>Foo
-- bar
-- baz</p>
+<span class="li">- bar</span><br/>
+<span class="li">- baz</span></p>
 .
 
-Unlike in Commonmark, lists can not break paragraphs.
+Lists are rendered within paragraphs as span elements
 .
 The number of windows in my house is
 1.  The number of doors is 6.
 .
 <p>The number of windows in my house is
-1. The number of doors is 6.</p>
+<span class="li">1. The number of doors is 6.</span></p>
 .
 
-Tight lists must be separated from the previous paragraph by a blank line
+List symbols at the beginning of lines may be escaped
 .
-Paragraph text
-- not a list
-- just more paragraph
-
-Paragraph text
-
-- Item 1
-- Item 2
+The number of windows in my house is
+1\.  The number of doors is 6.
+\- wait no, 7.
 .
-<p>Paragraph text
-- not a list
-- just more paragraph</p>
-<p>Paragraph text</p>
-<p class="li">- Item 1</p>
-<p class="li">- Item 2</p>
+<p>The number of windows in my house is
+1. The number of doors is 6.
+- wait no, 7.</p>
 .
 
 HEADINGS IN LIST ITEMS ARE NOT SUPPORTED
@@ -206,8 +210,8 @@ HEADINGS IN LIST ITEMS ARE NOT SUPPORTED
 ---
   baz
 .
-<p class="li">- # Foo</p>
-<p class="li">- Bar</p>
+<p><span class="li">- # Foo</span>
+<span class="li">- Bar</span></p>
 <hr>
 <p>baz</p>
 .
@@ -218,7 +222,7 @@ LIST ITEMS WITH MULTIPLE PARAGRAPHS ARE NOT SUPPORTED
 
     bar
 .
-<p>- foo</p>
+<p class="li">- foo</p>
 <pre><code>bar</code></pre>
 .
 
@@ -227,7 +231,7 @@ LIST ITEMS WITH MULTIPLE PARAGRAPHS ARE NOT SUPPORTED
 
 	bar
 .
-<p>- foo</p>
+<p class="li">- foo</p>
 <pre><code>bar</code></pre>
 .
 
@@ -237,7 +241,7 @@ LIST ITEMS WITH MULTIPLE PARAGRAPHS ARE NOT SUPPORTED
 
   two
 .
-<p>- one</p>
+<p class="li">- one</p>
 <p>two</p>
 .
 
@@ -247,7 +251,7 @@ LIST ITEMS WITH MULTIPLE PARAGRAPHS ARE NOT SUPPORTED
 
       two
 .
-<p>-    one</p>
+<p class="li">-    one</p>
 <pre><code>  two</code></pre>
 .
 
@@ -257,7 +261,7 @@ LIST ITEMS WITH MULTIPLE PARAGRAPHS ARE NOT SUPPORTED
 
    bar
 .
-<p>-  foo</p>
+<p class="li">-  foo</p>
 <p>bar</p>
 .
 
@@ -268,7 +272,7 @@ LIST ITEMS WITH MULTIPLE PARAGRAPHS ARE NOT SUPPORTED
 
   bar
 .
-<p>- foo</p>
+<p class="li">- foo</p>
 <p>bar</p>
 .
 
@@ -280,10 +284,10 @@ LIST ITEMS WITH MULTIPLE PARAGRAPHS ARE NOT SUPPORTED
     c
 - d
 .
-<p class="li">- a</p>
-<p class="li li2">- b</p>
+<p><span class="li">- a</span>
+<span class="li li2">- b</span></p>
 <pre><code>c</code></pre>
-<p>- d</p>
+<p class="li">- d</p>
 .
 
 LIST ITEMS WITH MULTIPLE INTERNAL ELEMENTS
@@ -295,7 +299,7 @@ LIST ITEMS WITH MULTIPLE INTERNAL ELEMENTS
 
     > A block quote.
 .
-<p>1. A paragraph
+<p class="li">1. A paragraph
 with two lines.</p>
 <pre><code>    indented code
 </code></pre>
@@ -308,8 +312,8 @@ with two lines.</p>
 
 		bar
 .
-<p>- foo</p>
-<pre><code>    bar
+<p class="li">- foo</p>
+<pre><code>	bar
 </code></pre>
 .
 
@@ -324,7 +328,7 @@ with two lines.</p>
 
     > bam
 .
-<p>1.  foo</p>
+<p class="li">1.  foo</p>
 <pre><code>```
 bar
 ```
@@ -343,7 +347,7 @@ bar
 .
 <blockquote>
 <blockquote>
-<p>1.  one</p>
+<p class="li">1.  one</p>
 <pre><code>two
 </pre></code>
 </blockquote>
@@ -358,7 +362,7 @@ bar
 .
 <blockquote>
 <blockquote>
-<p>- one</p>
+<p class="li">- one</p>
 <p>two</p>
 </blockquote>
 </blockquote>
@@ -372,7 +376,7 @@ bar
 
        more code
 .
-<p>1.     indented code</p>
+<p class="li">1.     indented code</p>
 <p>paragraph</p>
 <pre><code>   more code
 </code></pre>
@@ -384,7 +388,7 @@ LAZY NESTED STRUCTURES
 continued here.
 .
 <blockquote>
-<p>1. > Blockquote
+<p class="li">1. > Blockquote
 continued here.</p>
 </blockquote>
 .
@@ -392,26 +396,26 @@ continued here.</p>
 .
 - - foo
 .
-<p>- - foo</p>
+<p class="li">- - foo</p>
 .
 
 .
 1. - 2. foo
 .
-<p>1. - 2. foo</p>
+<p class="li">1. - 2. foo</p>
 .
 
 INDENTATION WITHIN LIST ITEMS
 .
 *     This is code in Commonmark.
 .
-<p>*     This is code in Commonmark.</p>
+<p class="li">*     This is code in Commonmark.</p>
 .
 
 .
 -		foo
 .
-<p>-		foo</p>
+<p class="li">-		foo</p>
 .
 
 .
@@ -427,8 +431,8 @@ ATTRIBUTES
 - Item 1 {.test}
 - Item 2 {.test}
 .
-<p class="li test">- Item 1</p>
-<p class="li test">- Item 2</p>
+<p><span class="li test">- Item 1</span><br/>
+<span class="li test">- Item 2</span></p>
 .
 
 .
@@ -436,8 +440,8 @@ ATTRIBUTES
 
 - Item 2 {.test}
 .
-<p class="test">- Item 1</p>
-<p class="test">- Item 2</p>
+<p class="li test">- Item 1</p>
+<p class="li test">- Item 2</p>
 .
 
 .
@@ -445,8 +449,8 @@ ATTRIBUTES
 - Item 2
   {.test}
 .
-<p class="li">- Item 1</p>
-<p class="li test">- Item 2</p>
+<p class="test"><span class="li">- Item 1</span>
+<span class="li">- Item 2</span></p>
 .
 
 .
@@ -454,5 +458,6 @@ ATTRIBUTES
 - Item 2
 {.test}
 .
-let's just see what happens
+<p class="test"><span class="li">- Item 1</span>
+<span class="li">- Item 2</span></p>
 .
