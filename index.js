@@ -245,6 +245,9 @@ function list(state, startLine, endLine, silent) {
 
   if (!state.inTightList && list(state, startLine + 1, startLine + 1, true)) {
     state.inTightList = state.level;
+    if (listTokIdx && !state.isEmpty(startLine - 1) && state.tokens[listTokIdx - 1].type === 'paragraph_close') {
+      token.paragraphLeech = true;
+    }
   }
 
   token.map    = listLines = [ startLine, 0 ];
@@ -441,6 +444,12 @@ function flattenList(state) {
         else {
           state.tokens[i].hidden = true
         }
+
+        if (state.tokens[i].paragraphLeech) {
+          state.tokens[i].hidden = true
+          state.tokens[i - 1].hidden = true
+        }
+
         break;
       case 'li':
         // capture the markup used to delineate the list item

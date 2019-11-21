@@ -303,36 +303,95 @@ Empty list items do not work in tight lists
 <p class="li">*</p>
 .
 
-SEPARATION FROM PREVIOUS PARAGRAPHS
+TIGHT LISTS CAN BE TACKED ON TO THE END OF PARAGRAPHS
 .
 Foo
 - bar
 - baz
 .
-<p>Foo
+<p>Foo<span class="li">- bar</span>
+<span class="li">- baz</span>
+</p>
+.
+
+A blank line after the paragraph will separate the tight list
+.
+Foo
+
+- bar
+- baz
+.
+<p>Foo</p>
+<p>
 <span class="li">- bar</span>
 <span class="li">- baz</span>
 </p>
 .
 
-Lists are rendered within paragraphs as span elements
+Tight lists closing paragraphs may be indented
+.
+Foo
+    1. bar
+    2. baz
+.
+.
+
+A single-line list does not close a paragraph
 .
 The number of windows in my house is
 1. The number of doors is 6.
 .
-<p>The number of windows in my house is</p>
-<p class="li">1. The number of doors is 6.</p>
+<p>The number of windows in my house is
+1. The number of doors is 6.</p>
+.
+
+Lists of more than one line close a paragraph
+.
+The number of windows in my house is
+1. The number of doors is 6. Wait, no it's
+7. I always forget the last one.
+.
+<p>The number of windows in my house is
+<span class="li">1. The number of doors is 6. Wait, no it's</span>
+<span class="li">7. I always forget the last one.</span>
+</p>
 .
 
 List symbols at the beginning of lines may be escaped
 .
 The number of windows in my house is
-1\. The number of doors is 6.
-\- wait no, 7.
+1\. The number of doors is 6. Wait, no it's
+7\. I always forget the last one.
 .
 <p>The number of windows in my house is
-1. The number of doors is 6.
-- wait no, 7.</p>
+1. The number of doors is 6. Wait, no it's
+7. I always forget the last one.</p>
+.
+
+There is no way to continue a tight list as a paragraph
+.
+- item 1
+- item 2
+...is simply continued as a list item
+.
+<p>
+<span class="li">- item 1</span>
+<span class="li">- item 2
+...is simply continued as a list item</span>
+</p>
+.
+
+There is no way to continue a paragraph after it is closed by a list
+.
+Paragraph text
+- this is a list
+- the second item
+...will eat the rest of the paragraph.
+.
+<p>Paragraph text<span class="li">- this is a list</span>
+<span class="li">- the second item
+...will eat the rest of the paragraph.</span>
+</p>
 .
 
 HEADINGS WORK IN LOOSE LISTS, BUT RETAIN THE LIST DELINEATOR
