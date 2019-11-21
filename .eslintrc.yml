@@ -5,10 +5,10 @@ env:
 
 rules:
   accessor-pairs:         2
-  array-bracket-spacing:  [ 1, 'always' ]
+  array-bracket-spacing:  2
   block-scoped-var:       2
   block-spacing:          2
-  brace-style:            [ 1, '1tbs', { allowSingleLine: true } ]
+  brace-style:            [ 2, 'stroustrup', { allowSingleLine: true } ]
   # Postponed
   #callback-return:        2
   comma-dangle:           [ 2, 'always-multiline' ]
@@ -125,7 +125,7 @@ rules:
   operator-assignment:    1
   # Postponed
   #operator-linebreak:     [ 2, after ]
-  semi:                   [ 2, always ]
+  semi:                   [ 2, never ]
   semi-spacing:           2
   space-before-function-paren: [ 2, { "anonymous": "always", "named": "never" } ]
   space-in-parens:        [ 2, never ]

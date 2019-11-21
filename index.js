@@ -1,9 +1,58 @@
 // Lists
+/* eslint-disable semi, brace-style, array-bracket-spacing */
 
 'use strict';
 
 var isSpace = require('markdown-it/lib/common/utils').isSpace;
 
+
+// Copy of parser_block.js:tokenize using different rules
+function tokenizeTightLists(state, startLine, endLine) {
+
+  var ok, i,
+      rules = state.md.block.ruler.getRules('tight_list'),
+      len = rules.length,
+      line = startLine,
+      hasEmptyLines = false,
+      maxNesting = state.md.options.maxNesting;
+
+  while (line < endLine) {
+    state.line = line = state.skipEmptyLines(line);
+    if (line >= endLine) { break; }
+    // Termination condition for nested calls.
+    // Nested calls currently used for blockquotes & lists
+    if (state.sCount[line] < state.blkIndent) { break; }
+    // If nesting level exceeded - skip tail to the end. That's not ordinary
+    // situation and we should not care about content.
+    if (state.level >= maxNesting) {
+      state.line = endLine;
+      break;
+    }
+    // Try all possible rules.
+    // On success, rule should:
+    //
+    // - update `state.line`
+    // - update `state.tokens`
+    // - return true
+    for (i = 0; i < len; i++) {
+      ok = rules[i](state, line, endLine, false);
+      if (ok) { break; }
+    }
+    // set state.tight if we had an empty line before current tag
+    // i.e. latest empty line should not count
+    state.tight = !hasEmptyLines;
+    // paragraph might "eat" one newline after it in nested lists
+    if (state.isEmpty(state.line - 1)) {
+      hasEmptyLines = true;
+    }
+    line = state.line;
+    if (line < endLine && state.isEmpty(line)) {
+      hasEmptyLines = true;
+      line++;
+      state.line = line;
+    }
+  }
+}
 
 // Search `[-+*][\n ]`, returns next pos after marker on success
 // or -1 on fail.
@@ -84,20 +133,16 @@ function skipOrderedListMarker(state, startLine) {
 }
 
 function markTightParagraphs(state, idx) {
-  var i, l,
-      level = state.level + 2;
+  var i, l;
 
   for (i = idx + 2, l = state.tokens.length - 2; i < l; i++) {
-    if (state.tokens[i].level === level && state.tokens[i].type === 'paragraph_open') {
-      state.tokens[i + 2].hidden = true;
-      state.tokens[i].hidden = true;
-      i += 2;
+    if (state.tokens[i].tag === 'p') {
+      state.tokens[i].tag = 'span';
     }
   }
 }
 
-
-module.exports = function list(state, startLine, endLine, silent) {
+function list(state, startLine, endLine, silent) {
   var ch,
       contentStart,
       i,
@@ -121,13 +166,12 @@ module.exports = function list(state, startLine, endLine, silent) {
       oldTight,
       pos,
       posAfterMarker,
-      prevEmptyEnd,
       start,
       terminate,
       terminatorRules,
       token,
       isTerminatingParagraph = false,
-      tight = true;
+      endTightList;
 
   // if it's indented more than 3 spaces, it should be a code block
   if (state.sCount[startLine] - state.blkIndent >= 4) { return false; }
@@ -199,6 +243,10 @@ module.exports = function list(state, startLine, endLine, silent) {
     token       = state.push('bullet_list_open', 'ul', 1);
   }
 
+  if (!state.inTightList && list(state, startLine + 1, startLine + 1, true)) {
+    state.inTightList = state.level;
+  }
+
   token.map    = listLines = [ startLine, 0 ];
   token.markup = String.fromCharCode(markerCharCode);
 
@@ -207,7 +255,6 @@ module.exports = function list(state, startLine, endLine, silent) {
   //
 
   nextLine = startLine;
-  prevEmptyEnd = false;
   terminatorRules = state.md.block.ruler.getRules('list');
 
   oldParentType = state.parentType;
@@ -253,6 +300,7 @@ module.exports = function list(state, startLine, endLine, silent) {
     // Run subparser & write tokens
     token        = state.push('list_item_open', 'li', 1);
     token.markup = String.fromCharCode(markerCharCode);
+    token.marker = state.src.slice(state.bMarks[nextLine], state.bMarks[nextLine] + indent).trim();
     token.map    = itemLines = [ startLine, 0 ];
 
     // change current state, then restore it after parser subcall
@@ -273,6 +321,18 @@ module.exports = function list(state, startLine, endLine, silent) {
     state.sCount[startLine] = offset;
 
     if (contentStart >= max && state.isEmpty(startLine + 1)) {
+
+      // workaround to retain content for empty loose list item
+      token = state.push('paragraph_open', 'p', 1);
+      token.map = [ state.line, state.line ];
+
+      token = state.push('inline', '', 0);
+      token.content = '';
+      token.map = [ state.line, state.line ];
+      token.children = [];
+
+      token = state.push('paragraph_close', 'p', -1);
+
       // workaround for this case
       // (list item is empty, list terminates before "foo"):
       // ~~~~~~~~
@@ -281,17 +341,17 @@ module.exports = function list(state, startLine, endLine, silent) {
       //     foo
       // ~~~~~~~~
       state.line = Math.min(state.line + 2, endLine);
+    } else if (state.inTightList) {
+      // Stop tight lists at blank lines
+      for (endTightList = nextLine + 1; endTightList < endLine; endTightList++) {
+        if (state.isEmpty(endTightList)) break;
+      }
+      // Tokenize using the tight list rules (default is list and paragraph only)
+      tokenizeTightLists(state, nextLine, endTightList);
+
     } else {
       state.md.block.tokenize(state, startLine, endLine, true);
     }
-
-    // If any of list item is tight, mark list as tight
-    if (!state.tight || prevEmptyEnd) {
-      tight = false;
-    }
-    // Item become loose if finish with empty line,
-    // but we should filter last element, because it means list finish
-    prevEmptyEnd = (state.line - startLine) > 1 && state.isEmpty(state.line - 1);
 
     state.blkIndent = state.listIndent;
     state.listIndent = oldListIndent;
@@ -352,9 +412,79 @@ module.exports = function list(state, startLine, endLine, silent) {
   state.parentType = oldParentType;
 
   // mark paragraphs tight if needed
-  if (tight) {
+  if (state.level + 1 === state.inTightList) {
+    state.tokens[listTokIdx].tight = true;
+    token.tight = true;
     markTightParagraphs(state, listTokIdx);
+    state.inTightList = false;
   }
 
   return true;
+}
+
+function flattenList(state) {
+  let level = 0
+  let marker = ''
+  for (let i = 0; i < state.tokens.length; i++) {
+    switch (state.tokens[i].tag) {
+      case 'ul':
+      case 'ol':
+
+        // capture the level of the list
+        level += state.tokens[i].nesting
+
+        // make tight lists into paragraphs
+        if (state.tokens[i].tight) {
+          state.tokens[i].tag = 'p'
+        }
+        // hide all other ol and ul elements
+        else {
+          state.tokens[i].hidden = true
+        }
+        break;
+      case 'li':
+        // capture the markup used to delineate the list item
+        marker = state.tokens[i].marker || ''
+        break;
+      case 'p':
+      case 'span':
+        // If the tag is in a list
+        if (level) {
+          // If it is an opening tag
+          if (state.tokens[i].type.indexOf('_open') > 0) {
+            // Set li classes
+            state.tokens[i].attrJoin('class', 'li')
+            if (level > 1) state.tokens[i].attrJoin('class', `li${level}`)
+          }
+        }
+        break;
+      default:
+        // Add the marker text to the next inline element
+        if (marker.length && state.tokens[i].type === 'inline') {
+          marker += state.tokens[i].content.length ? ' ' : '';
+          state.tokens[i].content = `${marker}${state.tokens[i].content}`;
+          marker = '';
+        }
+    }
+  }
+  return true;
+}
+
+
+module.exports = function plugin(md) {
+
+  // Replace the 'list' rule with ours, keeping the same alt options
+  md.block.ruler.at('list', list, { alt: md.block.ruler.__rules__[md.block.ruler.__find__('list')].alt });
+
+  // Add our flattening rule between block and inline rendering
+  md.core.ruler.after('block', 'flatten_list', flattenList);
+
+  // Create a chain for "tight_list" blocks
+  md.block.ruler.__rules__[md.block.ruler.__find__('paragraph')].alt.push('tight_list');
+  md.block.ruler.__rules__[md.block.ruler.__find__('list')].alt.push('tight_list');
+
+  // Do not render list items at all
+  md.renderer.rules.list_item_open = md.renderer.rules.list_item_close = () => { return ''; };
+
+  return md;
 };
