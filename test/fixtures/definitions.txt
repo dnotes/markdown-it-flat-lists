@@ -328,12 +328,15 @@ Foo
 </p>
 .
 
-Tight lists closing paragraphs may be indented
+Tight lists closing paragraphs cannot be indented by more than three spaces
 .
 Foo
-    1. bar
-    2. baz
+    - bar
+    - baz
 .
+<p>Foo
+- bar
+- baz</p>
 .
 
 A single-line list does not close a paragraph
