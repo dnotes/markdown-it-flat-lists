@@ -303,6 +303,36 @@ Empty list items do not work in tight lists
 <p class="li">*</p>
 .
 
+LOOSE LISTS MUST BE SEPARATED FROM PARAGRAPHS BY A BLANK LINE
+.
+Paragraph text
+- list item
+
+- list item
+
+- list item
+.
+<p>Paragraph text
+- list item</p>
+<p class="li">- list item</p>
+<p class="li">- list item</p>
+.
+
+(numbered)
+.
+Paragraph text
+1. list item
+
+2. list item
+
+3. list item
+.
+<p>Paragraph text
+1. list item</p>
+<p class="li">2. list item</p>
+<p class="li">3. list item</p>
+.
+
 TIGHT LISTS CAN BE TACKED ON TO THE END OF PARAGRAPHS
 .
 Foo
@@ -328,7 +358,7 @@ Foo
 </p>
 .
 
-Tight lists closing paragraphs cannot be indented by more than three spaces
+TODO: Tight lists closing paragraphs cannot be indented by more than three spaces
 .
 Foo
     - bar
@@ -354,8 +384,7 @@ The number of windows in my house is
 1. The number of doors is 6. Wait, no it's
 7. I always forget the last one.
 .
-<p>The number of windows in my house is
-<span class="li">1. The number of doors is 6. Wait, no it's</span>
+<p>The number of windows in my house is<span class="li">1. The number of doors is 6. Wait, no it's</span>
 <span class="li">7. I always forget the last one.</span>
 </p>
 .

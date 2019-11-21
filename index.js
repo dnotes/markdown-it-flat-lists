@@ -207,12 +207,18 @@ function list(state, startLine, endLine, silent) {
     start = state.bMarks[startLine] + state.tShift[startLine];
     markerValue = Number(state.src.substr(start, posAfterMarker - start - 1));
 
-    // If we're starting a new ordered list right after
-    // a paragraph, it should start with 1.
-    if (isTerminatingParagraph && markerValue !== 1) return false;
+    // If we're starting a new tight list to close a paragraph,
+    // it should include more than one element.
+    if (isTerminatingParagraph && !state.inTightList &&
+      skipOrderedListMarker(state, startLine + 1) === -1 &&
+      skipOrderedListMarker(state, startLine - 1) === -1) return false;
 
   } else if ((posAfterMarker = skipBulletListMarker(state, startLine)) >= 0) {
     isOrdered = false;
+
+    if (isTerminatingParagraph && !state.inTightList &&
+      skipBulletListMarker(state, startLine + 1) === -1 &&
+      skipBulletListMarker(state, startLine - 1) === -1) return false;
 
   } else {
     return false;
