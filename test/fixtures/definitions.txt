@@ -226,7 +226,7 @@ BLANK LINES
 <p class="li">- foo</p>
 .
 
-EMPTY LIST ITEMS
+EMPTY LIST ITEMS ARE PERMITTED IN LOOSE LISTS
 .
 -
 
@@ -235,30 +235,6 @@ EMPTY LIST ITEMS
 <p class="li">-</p>
 
 <p>foo</p>
-.
-
-.
-- foo
--
-- bar
-.
-<p>
-<span class="li">- foo</span>
-<span class="li">-</span>
-<span class="li">- bar</span>
-</p>
-.
-
-.
-- foo
--   
-- bar
-.
-<p>
-<span class="li">- foo</span>
-<span class="li">-</span>
-<span class="li">- bar</span>
-</p>
 .
 
 .
@@ -275,12 +251,48 @@ EMPTY LIST ITEMS
 
 .
 1. foo
+
+2.
+
+3. bar
+.
+<p class="li">1. foo</p>
+<p class="li">2.</p>
+<p class="li">3. bar</p>
+.
+
+Empty list items do not work in tight lists
+.
+- foo
+-
+- bar
+.
+<p>
+<span class="li">- foo</span>
+<span class="li">- bar</span>
+</p>
+.
+
+(even with extra spaces)
+.
+- foo
+-   
+- bar
+.
+<p>
+<span class="li">- foo</span>
+<span class="li">- bar</span>
+</p>
+.
+
+(even in ordered lists)
+.
+1. foo
 2.
 3. bar
 .
 <p>
 <span class="li">1. foo</span>
-<span class="li">2.</span>
 <span class="li">3. bar</span>
 </p>
 .
