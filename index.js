@@ -243,8 +243,11 @@ function list(state, startLine, endLine, silent) {
     token       = state.push('bullet_list_open', 'ul', 1);
   }
 
+  // For the first line of a tight list
   if (!state.inTightList && list(state, startLine + 1, startLine + 1, true)) {
+    // Set state.inTightList, to remember the level at which the list should end
     state.inTightList = state.level;
+    // Tight lists can combine with the previous paragraph
     if (listTokIdx && !state.isEmpty(startLine - 1) && state.tokens[listTokIdx - 1].type === 'paragraph_close') {
       token.paragraphLeech = true;
     }
