@@ -488,6 +488,35 @@ function flattenList(state) {
   return true;
 }
 
+function flattenAttrs(state) {
+  let level = 0
+  let stub = null
+  for (let i = 0; i < state.tokens.length; i++) {
+    switch (state.tokens[i].tag) {
+      case 'li':
+        level += state.tokens[i].nesting
+        if (state.tokens[i].type.indexOf('open') > 0 && state.tokens[i].attrs && state.tokens[i].attrs.length) {
+          // For these elements, we must get the attributes and add them to the last paragraph of the block
+          stub = new state.Token()
+          for (let x = 0; x < state.tokens[i].attrs.length; x++) {
+            stub.attrJoin(state.tokens[i].attrs[x][0], state.tokens[i].attrs[x][1])
+          }
+        }
+        else if (state.tokens[i].type.indexOf('close') > 0) {
+          stub = null
+        }
+        break;
+      case 'p':
+      case 'span':
+        if (level && stub !== null && state.tokens[i].type.indexOf('open') > -1 && stub.attrs && stub.attrs.length) {
+          for (let x = 0; x < stub.attrs.length; x++) {
+            state.tokens[i].attrJoin(stub.attrs[x][0], stub.attrs[x][1])
+          }
+        }
+        break;
+    }
+  }
+}
 
 module.exports = function plugin(md) {
 
@@ -496,6 +525,8 @@ module.exports = function plugin(md) {
 
   // Add our flattening rule between block and inline rendering
   md.core.ruler.after('block', 'flatten_list', flattenList);
+
+  md.core.ruler.push('flatten_attrs', flattenAttrs);
 
   // Create a chain for "tight_list" blocks
   md.block.ruler.__rules__[md.block.ruler.__find__('paragraph')].alt.push('tight_list');
