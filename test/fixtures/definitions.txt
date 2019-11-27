@@ -619,21 +619,6 @@ Tabs are expanded to spaces in loose list items
 </blockquote>
 .
 
-TODO: Mixing code blocks with lists is an edge case that needs review.
-.
-1.     indented code
-
-   paragraph
-
-       more code
-.
-<pre><code>indented code
-</code></pre>
-<p class="li">1. paragraph</p>
-<pre><code>more code
-</code></pre>
-.
-
 LAZY NESTED STRUCTURES
 .
 > 1. > Blockquote
@@ -658,59 +643,236 @@ continued here.</p>
 <p class="li li3">1. - 2. foo</p>
 .
 
-INDENTATION WITHIN LIST ITEMS
+TODO: Mixing code blocks with lists is an edge case that needs review.
+.
+1.     indented code
+
+   paragraph
+
+       more code
+.
+<pre><code>indented code
+</code></pre>
+<p class="li">1. paragraph</p>
+<pre><code>more code
+</code></pre>
+.
+
+TODO: When a list contains a code block, the list gets lost
 .
 *     This is code in Commonmark.
 .
-<p class="li">*     This is code in Commonmark.</p>
+<pre><code>This is code in Commonmark.
+</code></pre>
 .
 
 .
 -		foo
 .
-<p class="li">-		foo</p>
+<pre><code>  foo
+</code></pre>
 .
 
+List items with hanging indentation function as expected
 .
  *  List item
     with hanging indent
         and a further indent
 .
-let's just see what happens
+<p class="li">* List item
+with hanging indent
+and a further indent</p>
 .
 
 ATTRIBUTES
 .
-- Item 1 {.test}
-- Item 2 {.test}
+- Item 1 {.test1}
+- Item 2 {.test2}
+
+1. Item 1 {.test3}
+2. Item 2 {.test4}
 .
-<p><span class="li test">- Item 1</span><br/>
-<span class="li test">- Item 2</span></p>
+<p>
+<span class="li test1">- Item 1</span>
+<span class="li test2">- Item 2</span>
+</p>
+<p>
+<span class="li test3">1. Item 1</span>
+<span class="li test4">2. Item 2</span>
+</p>
 .
 
 .
-- Item 1 {.test}
+- Item 1 {.test1}
 
-- Item 2 {.test}
-.
-<p class="li test">- Item 1</p>
-<p class="li test">- Item 2</p>
-.
+- Item 2 {.test2}
 
+1. Item 1 {.test3}
+
+2. Item 2 {.test4}
 .
-- Item 1
-- Item 2
-  {.test}
-.
-<p class="test"><span class="li">- Item 1</span>
-<span class="li">- Item 2</span></p>
+<p class="li test1">- Item 1</p>
+<p class="li test2">- Item 2</p>
+<p class="li test3">1. Item 1</p>
+<p class="li test4">2. Item 2</p>
 .
 
+Attributes on the line after a tight list apply to the entire list
 .
 - Item 1
 - Item 2
 {.test}
+
+1. Item 1
+2. Item 2
+{.test}
 .
-<p class="test"><span class="li">- Item 1</span>
-<span class="li">- Item 2</span></p>
+<p class="test">
+<span class="li">- Item 1</span>
+<span class="li">- Item 2</span>
+</p>
+<p class="test">
+<span class="li">1. Item 1</span>
+<span class="li">2. Item 2</span>
+</p>
+.
+
+--Even if the attributes are indented to match the list items
+.
+- Item 1
+- Item 2
+  {.test}
+
+1. Item 1
+2. Item 2
+   {.test}
+.
+<p class="test">
+<span class="li">- Item 1</span>
+<span class="li">- Item 2</span>
+</p>
+<p class="test">
+<span class="li">1. Item 1</span>
+<span class="li">2. Item 2</span>
+</p>
+.
+
+Attributes on a line after a loose list apply to the last item
+.
+- Item 1
+
+- Item 2
+{.test}
+
+1. Item 1
+
+2. Item 2
+{.test}
+.
+<p class="li">- Item 1</p>
+<p class="li test">- Item 2</p>
+<p class="li">1. Item 1</p>
+<p class="li test">2. Item 2</p>
+.
+
+--Even if the attributes are indented to match the item
+.
+- Item 1
+
+- Item 2
+  {.test}
+
+1. Item 1
+
+2. Item 2
+   {.test}
+.
+<p class="li">- Item 1</p>
+<p class="li test">- Item 2</p>
+<p class="li">1. Item 1</p>
+<p class="li test">2. Item 2</p>
+.
+
+Attributes work in multi-level tight lists
+.
+- Item 1 {.test1}
+  - Item 1a {.test1a}
+  - Item 2a {.test1b}
+- Item 2 {.test2}
+  1. Item 2a {.test2a}
+  2. Item 2b {.test2b}
+.
+<p>
+<span class="li test1">- Item 1</span>
+<span class="li li2 test1a">- Item 1a</span>
+<span class="li li2 test1b">- Item 2a</span>
+<span class="li test2">- Item 2</span>
+<span class="li li2 test2a">1. Item 2a</span>
+<span class="li li2 test2b">2. Item 2b</span>
+</p>
+.
+
+Attributes work in multi-level loose lists
+.
+1. Item 1 {.test1}
+
+   - Item 1a {.test1a}
+
+   - Item 1b {.test1b}
+
+2. Item 2 {.test2}
+
+   1. Item 2a {.test2a}
+
+   2. Item 2b {.test2b}
+.
+<p class="li test1">1. Item 1</p>
+<p class="li li2 test1a">- Item 1a</p>
+<p class="li li2 test1b">- Item 1b</p>
+<p class="li test2">2. Item 2</p>
+<p class="li li2 test2a">1. Item 2a</p>
+<p class="li li2 test2b">2. Item 2b</p>
+.
+
+Attributes and continued items
+.
+- Item 1 {.test1}
+
+- Item 2 {.test2}
+
+  Item 2p {.test2p}
+.
+<p class="li test1">- Item 1</p>
+<p class="li test2">- Item 2</p>
+<p class="li test2p">Item 2p</p>
+.
+
+.
+1. Item 1 {.test1}
+
+2. Item 2 {.test2}
+
+   Item 2p {.test2p}
+.
+<p class="li test1">1. Item 1</p>
+<p class="li test2">2. Item 2</p>
+<p class="li test2p">Item 2p</p>
+.
+
+.
+- Item 1
+
+  Item 1p {.test}
+.
+<p class="li">- Item 1</p>
+<p class="li test">Item 1p</p>
+.
+
+.
+1. Item 1
+
+   Item 1p {.test}
+.
+<p class="li">1. Item 1</p>
+<p class="li test">Item 1p</p>
 .
