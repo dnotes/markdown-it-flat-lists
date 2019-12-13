@@ -13,17 +13,19 @@ function tokenizeTightLists(state, startLine, endLine) {
       rules = state.md.block.ruler.getRules('tight_list'),
       len = rules.length,
       line = startLine,
-      hasEmptyLines = false,
+      // hasEmptyLines = false, (we call this only on lists with no blank lines)
       maxNesting = state.md.options.maxNesting;
 
   while (line < endLine) {
     state.line = line = state.skipEmptyLines(line);
+    /* istanbul ignore if */ // (this should never happen because there are no blank lines)
     if (line >= endLine) { break; }
     // Termination condition for nested calls.
     // Nested calls currently used for blockquotes & lists
     if (state.sCount[line] < state.blkIndent) { break; }
     // If nesting level exceeded - skip tail to the end. That's not ordinary
     // situation and we should not care about content.
+    /* istanbul ignore if */
     if (state.level >= maxNesting) {
       state.line = endLine;
       break;
@@ -38,19 +40,9 @@ function tokenizeTightLists(state, startLine, endLine) {
       ok = rules[i](state, line, endLine, false);
       if (ok) { break; }
     }
-    // set state.tight if we had an empty line before current tag
-    // i.e. latest empty line should not count
-    state.tight = !hasEmptyLines;
-    // paragraph might "eat" one newline after it in nested lists
-    if (state.isEmpty(state.line - 1)) {
-      hasEmptyLines = true;
-    }
+    // No need to set state.tight, as this is a sub-process for tight lists
     line = state.line;
-    if (line < endLine && state.isEmpty(line)) {
-      hasEmptyLines = true;
-      line++;
-      state.line = line;
-    }
+    // No need to search for blank lines, as there are none
   }
 }
 
@@ -99,6 +91,7 @@ function skipOrderedListMarker(state, startLine) {
 
   for (;;) {
     // EOL -> fail
+    /* istanbul ignore if */
     if (pos >= max) { return -1; }
 
     ch = state.src.charCodeAt(pos++);
@@ -515,7 +508,7 @@ function flattenAttrs(state) {
             }
           }
         }
-        else if (state.tokens[i].type.indexOf('close') > 0) {
+        else /* if (state.tokens[i].type.indexOf('close') > 0) */ {
           if (lastParagraph[level] && stubs[level]) {
             // Merge attributes that have been saved from earlier
             for (let x = 0; x < stubs[level].attrs.length; x++) {
@@ -568,9 +561,12 @@ module.exports = function plugin(md) {
   // Add our flattening rule between block and inline rendering
   md.core.ruler.after('block', 'flatten_list', flattenList);
 
+  // Add our attribute flattening rule at the very end of core
   md.core.ruler.push('flatten_attrs', flattenAttrs);
 
   // Create a chain for "tight_list" blocks
+  // This is used in the tokenizeTightLists() function above; if other rules need to
+  // break a tight list item, they can also add "tight_list" to their alt rules.
   md.block.ruler.__rules__[md.block.ruler.__find__('paragraph')].alt.push('tight_list');
   md.block.ruler.__rules__[md.block.ruler.__find__('list')].alt.push('tight_list');
 

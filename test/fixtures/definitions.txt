@@ -143,6 +143,23 @@ Tight lists are broken by a change of marker
 </p>
 .
 
+List items indented more than four spaces beyond the first item are paragraph continuation
+.
+- item 1
+ - item 2
+  - item 3
+   - item 4
+    - this one is a paragraph continuation
+.
+<p>
+<span class="li">- item 1</span>
+<span class="li">- item 2</span>
+<span class="li">- item 3</span>
+<span class="li">- item 4
+- this one is a paragraph continuation</span>
+</p>
+.
+
 "LOOSE" LISTS ARE RENDERED AS FLAT PARAGRAPHS
 .
 1. Item 1
@@ -875,4 +892,60 @@ Attributes and continued items
 .
 <p class="li test1">1. Item 1</p>
 <p class="li test1p">Item 1p</p>
+.
+
+Lists are terminated by code fences, blockquotes, and thematic breaks
+.
+- List 1
+```
+Code
+```
+{.test}
+
+- List 2
+> Blockquote
+{.test}
+
+- List 3
+---
+{.test}
+.
+<p class="li">- List 1</p>
+<pre><code>Code
+</code></pre>
+<p class="test"></p>
+<p class="li">- List 2</p>
+
+<blockquote class="test">
+<p>Blockquote</p>
+</blockquote>
+<p class="li">- List 3</p>
+
+<hr />
+<p class="test"></p>
+.
+
+Numbered lists cannot have more than nine digits
+.
+1234567890. Not a list
+.
+<p>1234567890. Not a list</p>
+.
+
+Numbered lists must have a space between the list marker and the content
+.
+ 1.Not a list
+.
+<p>1.Not a list</p>
+.
+
+The first line of an unordered list following a paragraph cannot be empty
+.
+Paragraph text
+* 
+* First list item
+.
+<p>Paragraph text
+*</p>
+<p class="li">* First list item</p>
 .
