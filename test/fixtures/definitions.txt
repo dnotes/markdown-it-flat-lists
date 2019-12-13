@@ -860,19 +860,19 @@ Attributes and continued items
 .
 
 .
-- Item 1
+- Item 1 {.test1}
 
-  Item 1p {.test}
+  Item 1p {.test1p}
 .
-<p class="li">- Item 1</p>
-<p class="li test">Item 1p</p>
+<p class="li test1">- Item 1</p>
+<p class="li test1p">Item 1p</p>
 .
 
 .
-1. Item 1
+1. Item 1 {.test1}
 
-   Item 1p {.test}
+   Item 1p {.test1p}
 .
-<p class="li">1. Item 1</p>
-<p class="li test">Item 1p</p>
+<p class="li test1">1. Item 1</p>
+<p class="li test1p">Item 1p</p>
 .

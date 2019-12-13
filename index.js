@@ -155,7 +155,6 @@ function list(state, startLine, endLine, silent) {
       listLines,
       listTokIdx,
       markerCharCode,
-      markerValue,
       max,
       nextLine,
       offset,
@@ -166,7 +165,6 @@ function list(state, startLine, endLine, silent) {
       oldTight,
       pos,
       posAfterMarker,
-      start,
       terminate,
       terminatorRules,
       token,
@@ -204,8 +202,9 @@ function list(state, startLine, endLine, silent) {
   // Detect list type and position after marker
   if ((posAfterMarker = skipOrderedListMarker(state, startLine)) >= 0) {
     isOrdered = true;
-    start = state.bMarks[startLine] + state.tShift[startLine];
-    markerValue = Number(state.src.substr(start, posAfterMarker - start - 1));
+    // TODO: should we highlight the list marker somehow?
+    // start = state.bMarks[startLine] + state.tShift[startLine];
+    // markerValue = Number(state.src.substr(start, posAfterMarker - start - 1));
 
     // If we're starting a new tight list to close a paragraph,
     // it should include more than one element.
@@ -241,10 +240,7 @@ function list(state, startLine, endLine, silent) {
 
   if (isOrdered) {
     token       = state.push('ordered_list_open', 'ol', 1);
-    if (markerValue !== 1) {
-      token.attrs = [ [ 'start', markerValue ] ];
-    }
-
+    // We don't need the start marker for flat lists because we use manual numbering
   } else {
     token       = state.push('bullet_list_open', 'ul', 1);
   }
@@ -488,29 +484,75 @@ function flattenList(state) {
   return true;
 }
 
+/**
+ * We go once through the entire array of tokens, taking the attributes assigned
+ * to <ul>, <ol>, and <li> elements and assigning them to the proper <p> and <span>.
+ * For each level of the list we must record the attributes for each of the
+ * <ol>, <ul>, and <li> elements, and we must remember the index of the opening token
+ * for the last paragraph at each level. Then, when we come to a closing token for
+ * a list or list item, we can assign the attributes to the correct opening token
+ * for its corresponding last paragraph.
+ * @param {object} state The state object from markdown-it
+ */
 function flattenAttrs(state) {
   let level = 0
-  let stub = null
+  let stubs = {}
+  let lastParagraph = {}
   for (let i = 0; i < state.tokens.length; i++) {
     switch (state.tokens[i].tag) {
+      case 'ol':
+      case 'ul':
       case 'li':
-        level += state.tokens[i].nesting
-        if (state.tokens[i].type.indexOf('open') > 0 && state.tokens[i].attrs && state.tokens[i].attrs.length) {
-          // For these elements, we must get the attributes and add them to the last paragraph of the block
-          stub = new state.Token()
-          for (let x = 0; x < state.tokens[i].attrs.length; x++) {
-            stub.attrJoin(state.tokens[i].attrs[x][0], state.tokens[i].attrs[x][1])
+        if (state.tokens[i].type.indexOf('open') > 0) {
+          // For opening tokens, we increase the level first
+          level += state.tokens[i].nesting
+          if (state.tokens[i].attrs && state.tokens[i].attrs.length) {
+            // For these elements, we must get the attributes and store them in a stub token,
+            // So that later we can add them to the last paragraph.
+            stubs[level] = new state.Token()
+            for (let x = 0; x < state.tokens[i].attrs.length; x++) {
+              stubs[level].attrJoin(state.tokens[i].attrs[x][0], state.tokens[i].attrs[x][1])
+            }
           }
         }
         else if (state.tokens[i].type.indexOf('close') > 0) {
-          stub = null
+          if (lastParagraph[level] && stubs[level]) {
+            // Merge attributes that have been saved from earlier
+            for (let x = 0; x < stubs[level].attrs.length; x++) {
+              state.tokens[lastParagraph[level]].attrJoin(stubs[level].attrs[x][0], stubs[level].attrs[x][1])
+            }
+          }
+          // After merging attributes, unset the stub token
+          stubs[level] = null
+          // For closing tokens, the last thing we do is decrease the level
+          level += state.tokens[i].nesting
         }
         break;
       case 'p':
       case 'span':
-        if (level && stub !== null && state.tokens[i].type.indexOf('open') > -1 && stub.attrs && stub.attrs.length) {
-          for (let x = 0; x < stub.attrs.length; x++) {
-            state.tokens[i].attrJoin(stub.attrs[x][0], stub.attrs[x][1])
+        if (level && state.tokens[i].type.indexOf('open') > 0) {
+          // For the <ol> and <ul> elements, we need to remember the last paragraph
+          // so that we can capture any attributes assigned to the list, e.g. in the
+          // following case the ".class" will be assigned to the <ul> element instead
+          // of the actual list item.
+          //  - List item
+          //    {.class}
+          lastParagraph[level] = i
+          lastParagraph[level - 1] = i
+          // However, in cases where the list item receives the attributes, we must
+          // assign them to the first paragraph; otherwise, list items with multiple
+          // paragraphs will have attributes wrongly assigned to the last paragraph,
+          // e.g. in the following example the ".p1" class should be assigned to the
+          // first paragraph:
+          // - List item paragraph 1 {.p1}
+          //
+          //   List item paragraph 2 {.p2}
+
+          if (stubs[level]) {
+            for (let x = 0; x < stubs[level].attrs.length; x++) {
+              state.tokens[lastParagraph[level]].attrJoin(stubs[level].attrs[x][0], stubs[level].attrs[x][1])
+            }
+            stubs[level] = null
           }
         }
         break;
