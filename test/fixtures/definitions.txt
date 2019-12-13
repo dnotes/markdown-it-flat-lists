@@ -1,35 +1,166 @@
-Numbered list items render as flat paragraphs
+BASICS
+
+"TIGHT" LISTS ARE RENDERED AS A SINGLE PARAGRAPH
 .
 1. Item 1
 2. Item 2
 2. Item 3
 .
-<p class="list-item">1. Item 1</p>
-<p class="list-item">2. Item 2</p>
-<p class="list-item">2. Item 3</p>
+<p>
+<span class="li">1. Item 1</span>
+<span class="li">2. Item 2</span>
+<span class="li">2. Item 3</span>
+</p>
 .
 
-Bulleted list items render as flat paragraphs
 .
 - Item 1
 - Item 2
 .
-<p class="list-item">- Item 1</p>
-<p class="list-item">- Item 2</p>
+<p>
+<span class="li">- Item 1</span>
+<span class="li">- Item 2</span>
+</p>
 .
 
-Nested list items render with a depth indicator
+Multi-level tight lists are allowed
 .
 - Item 1
+  - Item 1a
 - Item 2
     - Item 2a
+        - Item 2a1
+- Item 3
+  - Item 3a
+  - Item 3b
+    - Item 3b1
+    - Item 3b2
+  - Item 3c
+  - Item 3d
+- Item 4
 .
-<p class="list-item">- Item 1</p>
-<p class="list-item">- Item 2</p>
-<p class="list-item indent-2">- Item 2a</p>
+<p>
+<span class="li">- Item 1</span>
+<span class="li li2">- Item 1a</span>
+<span class="li">- Item 2</span>
+<span class="li li2">- Item 2a</span>
+<span class="li li3">- Item 2a1</span>
+<span class="li">- Item 3</span>
+<span class="li li2">- Item 3a</span>
+<span class="li li2">- Item 3b</span>
+<span class="li li3">- Item 3b1</span>
+<span class="li li3">- Item 3b2</span>
+<span class="li li2">- Item 3c</span>
+<span class="li li2">- Item 3d</span>
+<span class="li">- Item 4</span>
+</p>
 .
 
-Expanded numbered list items render as flat paragraphs
+Multi-level tight lists can mix ordered and bullet lists
+.
+1. Such
+   - Point 1
+   - Point 2
+2. So
+    - Point 1
+    - Point 2
+.
+<p>
+<span class="li">1. Such</span>
+<span class="li li2">- Point 1</span>
+<span class="li li2">- Point 2</span>
+<span class="li">2. So</span>
+<span class="li li2">- Point 1</span>
+<span class="li li2">- Point 2</span>
+</p>
+.
+
+Tight lists end at any blank line
+.
+- Item 1
+  - Item 1a
+
+  - Item 1
+- Item 2
+    - Item 2a
+    
+    - Code block
+.
+<p>
+<span class="li">- Item 1</span>
+<span class="li li2">- Item 1a</span>
+</p>
+<p>
+<span class="li">- Item 1</span>
+<span class="li">- Item 2</span>
+<span class="li li2">- Item 2a</span>
+</p>
+<pre><code>- Code block
+</code></pre>
+.
+
+Block elements are ignored within tight lists
+.
+- tight
+- tight
+list
+with
+more
+paragraph
+text
+-      no code
+- > no blockquotes
+- # no headings
+.
+<p>
+<span class="li">- tight</span>
+<span class="li">- tight
+list
+with
+more
+paragraph
+text</span>
+<span class="li">- no code</span>
+<span class="li">- &gt; no blockquotes</span>
+<span class="li">- # no headings</span>
+</p>
+.
+
+Tight lists are broken by a change of marker
+.
+- Item 1
+- Item 2
+* Item 1
+* Item 2
+.
+<p>
+<span class="li">- Item 1</span>
+<span class="li">- Item 2</span>
+</p>
+<p>
+<span class="li">* Item 1</span>
+<span class="li">* Item 2</span>
+</p>
+.
+
+List items indented more than four spaces beyond the first item are paragraph continuation
+.
+- item 1
+ - item 2
+  - item 3
+   - item 4
+    - this one is a paragraph continuation
+.
+<p>
+<span class="li">- item 1</span>
+<span class="li">- item 2</span>
+<span class="li">- item 3</span>
+<span class="li">- item 4
+- this one is a paragraph continuation</span>
+</p>
+.
+
+"LOOSE" LISTS ARE RENDERED AS FLAT PARAGRAPHS
 .
 1. Item 1
 
@@ -37,22 +168,20 @@ Expanded numbered list items render as flat paragraphs
 
 2. Item 3
 .
-<p class="list-item">1. Item 1</p>
-<p class="list-item">2. Item 2</p>
-<p class="list-item">2. Item 3</p>
+<p class="li">1. Item 1</p>
+<p class="li">2. Item 2</p>
+<p class="li">2. Item 3</p>
 .
 
-Expanded bulleted list items render as flat paragraphs
 .
 - Item 1
 
 - Item 2
 .
-<p class="list-item">- Item 1</p>
-<p class="list-item">- Item 2</p>
+<p class="li">- Item 1</p>
+<p class="li">- Item 2</p>
 .
 
-Expanded nested list items render with a depth indicator
 .
 - Item 1
 
@@ -60,8 +189,763 @@ Expanded nested list items render with a depth indicator
 
     - Item 2a
 .
-<p class="list-item">- Item 1</p>
-<p class="list-item">- Item 2</p>
-<p class="list-item indent-2">- Item 2a</p>
+<p class="li">- Item 1</p>
+<p class="li">- Item 2</p>
+<p class="li li2">- Item 2a</p>
 .
 
+.
+1. Paragraph text.
+
+2. Paragraph text.
+
+   1. Paragraph text.
+.
+<p class="li">1. Paragraph text.</p>
+<p class="li">2. Paragraph text.</p>
+<p class="li li2">1. Paragraph text.</p>
+.
+
+HANGING INDENTATION IS SUPPORTED
+.
+1.  Item 1
+    with a hanging indent
+
+ -  Item 1
+    with a hanging indent
+.
+<p class="li">1. Item 1
+with a hanging indent</p>
+<p class="li">- Item 1
+with a hanging indent</p>
+.
+
+(also with <4 spaces)
+.
+- This is a list paragraph
+  with hanging indentation;
+  it should be rendered as
+  a single paragraph, since
+  the indent is 2 spaces.
+.
+<p class="li">- This is a list paragraph
+with hanging indentation;
+it should be rendered as
+a single paragraph, since
+the indent is 2 spaces.</p>
+.
+
+BLANK LINES
+.
+-   
+  foo
+.
+<p class="li">- foo</p>
+.
+
+EMPTY LIST ITEMS ARE PERMITTED IN LOOSE LISTS
+.
+-
+
+  foo
+.
+<p class="li">-</p>
+
+<p>foo</p>
+.
+
+.
+- foo
+
+-   
+
+- bar
+.
+<p class="li">- foo</p>
+<p class="li">-</p>
+<p class="li">- bar</p>
+.
+
+.
+1. foo
+
+2.
+
+3. bar
+.
+<p class="li">1. foo</p>
+<p class="li">2.</p>
+<p class="li">3. bar</p>
+.
+
+Empty list items do not work in tight lists
+.
+- foo
+-
+- bar
+.
+<p>
+<span class="li">- foo</span>
+<span class="li">- bar</span>
+</p>
+.
+
+(even with extra spaces)
+.
+- foo
+-   
+- bar
+.
+<p>
+<span class="li">- foo</span>
+<span class="li">- bar</span>
+</p>
+.
+
+(even in ordered lists)
+.
+1. foo
+2.
+3. bar
+.
+<p>
+<span class="li">1. foo</span>
+<span class="li">3. bar</span>
+</p>
+.
+
+.
+*
+.
+<p class="li">*</p>
+.
+
+LOOSE LISTS MUST BE SEPARATED FROM PARAGRAPHS BY A BLANK LINE
+.
+Paragraph text
+- list item
+
+- list item
+
+- list item
+.
+<p>Paragraph text
+- list item</p>
+<p class="li">- list item</p>
+<p class="li">- list item</p>
+.
+
+(numbered)
+.
+Paragraph text
+1. list item
+
+2. list item
+
+3. list item
+.
+<p>Paragraph text
+1. list item</p>
+<p class="li">2. list item</p>
+<p class="li">3. list item</p>
+.
+
+TIGHT LISTS CAN BE TACKED ON TO THE END OF PARAGRAPHS
+.
+Foo
+- bar
+- baz
+.
+<p>Foo<span class="li">- bar</span>
+<span class="li">- baz</span>
+</p>
+.
+
+A blank line after the paragraph will separate the tight list
+.
+Foo
+
+- bar
+- baz
+.
+<p>Foo</p>
+<p>
+<span class="li">- bar</span>
+<span class="li">- baz</span>
+</p>
+.
+
+TODO: Tight lists closing paragraphs cannot be indented by more than three spaces
+.
+Foo
+    - bar
+    - baz
+.
+<p>Foo
+- bar
+- baz</p>
+.
+
+A single-line list does not close a paragraph
+.
+The number of windows in my house is
+1. The number of doors is 6.
+.
+<p>The number of windows in my house is
+1. The number of doors is 6.</p>
+.
+
+Lists of more than one line close a paragraph
+.
+The number of windows in my house is
+1. The number of doors is 6. Wait, no it's
+7. I always forget the last one.
+.
+<p>The number of windows in my house is<span class="li">1. The number of doors is 6. Wait, no it's</span>
+<span class="li">7. I always forget the last one.</span>
+</p>
+.
+
+List symbols at the beginning of lines may be escaped
+.
+The number of windows in my house is
+1\. The number of doors is 6. Wait, no it's
+7\. I always forget the last one.
+.
+<p>The number of windows in my house is
+1. The number of doors is 6. Wait, no it's
+7. I always forget the last one.</p>
+.
+
+There is no way to continue a tight list as a paragraph
+.
+- item 1
+- item 2
+...is simply continued as a list item
+.
+<p>
+<span class="li">- item 1</span>
+<span class="li">- item 2
+...is simply continued as a list item</span>
+</p>
+.
+
+There is no way to continue a paragraph after it is closed by a list
+.
+Paragraph text
+- this is a list
+- the second item
+...will eat the rest of the paragraph.
+.
+<p>Paragraph text<span class="li">- this is a list</span>
+<span class="li">- the second item
+...will eat the rest of the paragraph.</span>
+</p>
+.
+
+HEADINGS WORK IN LOOSE LISTS, BUT RETAIN THE LIST DELINEATOR
+.
+- # Foo
+
+- Bar
+.
+<h1>- Foo</h1>
+<p class="li">- Bar</p>
+.
+
+LOOSE LISTS SUPPORT ITEMS WITH MULTIPLE PARAGRAPHS
+.
+  - foo
+
+    bar
+.
+<p class="li">- foo</p>
+<p class="li">bar</p>
+.
+
+(with tabs)
+.
+  - foo
+
+	bar
+.
+<p class="li">- foo</p>
+<p class="li">bar</p>
+.
+
+(from Commonmark)
+.
+- one
+
+  two
+.
+<p class="li">- one</p>
+<p class="li">two</p>
+.
+
+(second paragraph indented by more than four spaces from the margin)
+.
+ -    one
+
+      two
+.
+<p class="li">- one</p>
+<p class="li">two</p>
+.
+
+(paragraphs indented by extra spaces from the list delineator)
+.
+-  foo
+
+   bar
+.
+<p class="li">- foo</p>
+<p class="li">bar</p>
+.
+
+(paragraphs separated by multiple blank lines)
+.
+- foo
+
+
+  bar
+.
+<p class="li">- foo</p>
+<p class="li">bar</p>
+.
+
+(paragraphs in nested items)
+.
+- a
+
+  - b
+
+    c
+
+- d
+.
+<p class="li">- a</p>
+<p class="li li2">- b</p>
+<p class="li li2">c</p>
+<p class="li">- d</p>
+.
+
+LOOSE LIST ITEMS SUPPORT CODE AND BLOCKQUOTES
+.
+1.  A paragraph
+    with two lines.
+
+        indented code
+
+    > A block quote.
+.
+<p class="li">1. A paragraph
+with two lines.</p>
+<pre><code>indented code
+</code></pre>
+<blockquote>
+<p class="li">A block quote.</p>
+</blockquote>
+.
+
+Mixing blockquote elements with list elements yields blockquotes outside the list item paragraphs
+.
+- Item one
+
+  > A quote about item one, in which is a list of items:
+
+    - First item
+
+      > Quotation about the item inside the quotation
+.
+<p class="li">- Item one</p>
+<blockquote>
+<p class="li">A quote about item one, in which is a list of items:</p>
+</blockquote>
+<p class="li li2">- First item</p>
+<blockquote>
+<p class="li li2">Quotation about the item inside the quotation</p>
+</blockquote>
+.
+
+(lazy structure)
+.
+- > - > blockquotes go outside paragraphs!
+.
+<blockquote><blockquote>
+<p class="li li2">- blockquotes go outside paragraphs!</p>
+</blockquote>
+</blockquote>
+.
+
+Tabs are expanded to spaces in loose list items
+.
+- foo
+
+		bar
+.
+<p class="li">- foo</p>
+<pre><code>  bar
+</code></pre>
+.
+
+.
+1.  foo
+
+    ```
+    bar
+    ```
+
+    baz
+
+    > bam
+.
+<p class="li">1. foo</p>
+<pre><code>bar
+</code></pre>
+<p class="li">baz</p>
+<blockquote>
+<p class="li">bam</p>
+</blockquote>
+.
+
+(funky indentation: the second item is part of the first list item in Commonmark)
+.
+   > > 1.  one
+>>
+>>     two
+.
+<blockquote>
+<blockquote><p class="li">1. one</p>
+<p class="li">two</p>
+</blockquote>
+</blockquote>
+.
+
+(funky indentation: the second item is NOT part of the first list item in Commonmark)
+.
+>>- one
+>>
+  >  > two
+.
+<blockquote>
+<blockquote><p class="li">- one</p>
+
+<p>two</p>
+</blockquote>
+</blockquote>
+.
+
+LAZY NESTED STRUCTURES
+.
+> 1. > Blockquote
+continued here.
+.
+<blockquote><blockquote>
+<p class="li">1. Blockquote
+continued here.</p>
+</blockquote>
+</blockquote>
+.
+
+.
+- - foo
+.
+<p class="li li2">- - foo</p>
+.
+
+.
+1. - 2. foo
+.
+<p class="li li3">1. - 2. foo</p>
+.
+
+TODO: Mixing code blocks with lists is an edge case that needs review.
+.
+1.     indented code
+
+   paragraph
+
+       more code
+.
+<pre><code>indented code
+</code></pre>
+<p class="li">1. paragraph</p>
+<pre><code>more code
+</code></pre>
+.
+
+TODO: When a list contains a code block, the list gets lost
+.
+*     This is code in Commonmark.
+.
+<pre><code>This is code in Commonmark.
+</code></pre>
+.
+
+.
+-		foo
+.
+<pre><code>  foo
+</code></pre>
+.
+
+List items with hanging indentation function as expected
+.
+ *  List item
+    with hanging indent
+        and a further indent
+.
+<p class="li">* List item
+with hanging indent
+and a further indent</p>
+.
+
+ATTRIBUTES
+.
+- Item 1 {.test1}
+- Item 2 {.test2}
+
+1. Item 1 {.test3}
+2. Item 2 {.test4}
+.
+<p>
+<span class="li test1">- Item 1</span>
+<span class="li test2">- Item 2</span>
+</p>
+<p>
+<span class="li test3">1. Item 1</span>
+<span class="li test4">2. Item 2</span>
+</p>
+.
+
+.
+- Item 1 {.test1}
+
+- Item 2 {.test2}
+
+1. Item 1 {.test3}
+
+2. Item 2 {.test4}
+.
+<p class="li test1">- Item 1</p>
+<p class="li test2">- Item 2</p>
+<p class="li test3">1. Item 1</p>
+<p class="li test4">2. Item 2</p>
+.
+
+Attributes on the line after a tight list apply to the entire list
+.
+- Item 1
+- Item 2
+{.test}
+
+1. Item 1
+2. Item 2
+{.test}
+.
+<p class="test">
+<span class="li">- Item 1</span>
+<span class="li">- Item 2</span>
+</p>
+<p class="test">
+<span class="li">1. Item 1</span>
+<span class="li">2. Item 2</span>
+</p>
+.
+
+--Even if the attributes are indented to match the list items
+.
+- Item 1
+- Item 2
+  {.test}
+
+1. Item 1
+2. Item 2
+   {.test}
+.
+<p class="test">
+<span class="li">- Item 1</span>
+<span class="li">- Item 2</span>
+</p>
+<p class="test">
+<span class="li">1. Item 1</span>
+<span class="li">2. Item 2</span>
+</p>
+.
+
+Attributes on a line after a loose list apply to the last item
+.
+- Item 1
+
+- Item 2
+{.test}
+
+1. Item 1
+
+2. Item 2
+{.test}
+.
+<p class="li">- Item 1</p>
+<p class="li test">- Item 2</p>
+<p class="li">1. Item 1</p>
+<p class="li test">2. Item 2</p>
+.
+
+--Even if the attributes are indented to match the item
+.
+- Item 1
+
+- Item 2
+  {.test}
+
+1. Item 1
+
+2. Item 2
+   {.test}
+.
+<p class="li">- Item 1</p>
+<p class="li test">- Item 2</p>
+<p class="li">1. Item 1</p>
+<p class="li test">2. Item 2</p>
+.
+
+Attributes work in multi-level tight lists
+.
+- Item 1 {.test1}
+  - Item 1a {.test1a}
+  - Item 2a {.test1b}
+- Item 2 {.test2}
+  1. Item 2a {.test2a}
+  2. Item 2b {.test2b}
+.
+<p>
+<span class="li test1">- Item 1</span>
+<span class="li li2 test1a">- Item 1a</span>
+<span class="li li2 test1b">- Item 2a</span>
+<span class="li test2">- Item 2</span>
+<span class="li li2 test2a">1. Item 2a</span>
+<span class="li li2 test2b">2. Item 2b</span>
+</p>
+.
+
+Attributes work in multi-level loose lists
+.
+1. Item 1 {.test1}
+
+   - Item 1a {.test1a}
+
+   - Item 1b {.test1b}
+
+2. Item 2 {.test2}
+
+   1. Item 2a {.test2a}
+
+   2. Item 2b {.test2b}
+.
+<p class="li test1">1. Item 1</p>
+<p class="li li2 test1a">- Item 1a</p>
+<p class="li li2 test1b">- Item 1b</p>
+<p class="li test2">2. Item 2</p>
+<p class="li li2 test2a">1. Item 2a</p>
+<p class="li li2 test2b">2. Item 2b</p>
+.
+
+Attributes and continued items
+.
+- Item 1 {.test1}
+
+- Item 2 {.test2}
+
+  Item 2p {.test2p}
+.
+<p class="li test1">- Item 1</p>
+<p class="li test2">- Item 2</p>
+<p class="li test2p">Item 2p</p>
+.
+
+.
+1. Item 1 {.test1}
+
+2. Item 2 {.test2}
+
+   Item 2p {.test2p}
+.
+<p class="li test1">1. Item 1</p>
+<p class="li test2">2. Item 2</p>
+<p class="li test2p">Item 2p</p>
+.
+
+.
+- Item 1 {.test1}
+
+  Item 1p {.test1p}
+.
+<p class="li test1">- Item 1</p>
+<p class="li test1p">Item 1p</p>
+.
+
+.
+1. Item 1 {.test1}
+
+   Item 1p {.test1p}
+.
+<p class="li test1">1. Item 1</p>
+<p class="li test1p">Item 1p</p>
+.
+
+Lists are terminated by code fences, blockquotes, and thematic breaks
+.
+- List 1
+```
+Code
+```
+{.test}
+
+- List 2
+> Blockquote
+{.test}
+
+- List 3
+---
+{.test}
+.
+<p class="li">- List 1</p>
+<pre><code>Code
+</code></pre>
+<p class="test"></p>
+<p class="li">- List 2</p>
+
+<blockquote class="test">
+<p>Blockquote</p>
+</blockquote>
+<p class="li">- List 3</p>
+
+<hr />
+<p class="test"></p>
+.
+
+Numbered lists cannot have more than nine digits
+.
+1234567890. Not a list
+.
+<p>1234567890. Not a list</p>
+.
+
+Numbered lists must have a space between the list marker and the content
+.
+ 1.Not a list
+.
+<p>1.Not a list</p>
+.
+
+The first line of an unordered list following a paragraph cannot be empty
+.
+Paragraph text
+* 
+* First list item
+.
+<p>Paragraph text
+*</p>
+<p class="li">* First list item</p>
+.
